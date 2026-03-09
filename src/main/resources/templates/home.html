@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<head><title>Verificar noticia</title></head>
+
+<th:block layout:fragment="head">
+<style>
+    /* ─── HOME PAGE ─────────────────────────────────── */
+    .home-wrap {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 3.5rem 2rem 4rem;
+    }
+
+    /* ── Hero ── */
+    .hero {
+        text-align: center;
+        margin-bottom: 3rem;
+        animation: fadeDown 0.5s ease both;
+    }
+
+    @keyframes fadeDown {
+        from { opacity:0; transform:translateY(-14px); }
+        to   { opacity:1; transform:translateY(0); }
+    }
+
+    .hero__eyebrow {
+        font-size: 0.7rem;
+        font-weight: 500;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--gold);
+        margin-bottom: 0.9rem;
+    }
+
+    .hero__title {
+        font-family: var(--font-serif);
+        font-size: clamp(2rem, 4vw, 2.8rem);
+        font-weight: 900;
+        color: var(--cream);
+        line-height: 1.15;
+        margin-bottom: 0.75rem;
+        letter-spacing: -0.02em;
+    }
+
+    .hero__subtitle {
+        font-size: 0.95rem;
+        color: var(--muted-2);
+        max-width: 500px;
+        margin: 0 auto;
+        line-height: 1.7;
+    }
+
+    /* ── Input card ── */
+    .input-card {
+        background: var(--ink-2);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 2rem;
+        margin-bottom: 2.5rem;
+        animation: fadeUp 0.5s 0.15s ease both;
+    }
+
+    @keyframes fadeUp {
+        from { opacity:0; transform:translateY(12px); }
+        to   { opacity:1; transform:translateY(0); }
+    }
+
+    .input-card__label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.78rem;
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted-2);
+        margin-bottom: 0.75rem;
+    }
+
+    .char-count {
+        font-size: 0.75rem;
+        color: var(--muted);
+        font-weight: 400;
+        letter-spacing: 0;
+        text-transform: none;
+    }
+
+    .news-textarea {
+        width: 100%;
+        background: var(--ink);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1rem 1.1rem;
+        font-family: var(--font-sans);
+        font-size: 0.9rem;
+        color: var(--cream);
+        line-height: 1.65;
+        resize: vertical;
+        min-height: 160px;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .news-textarea::placeholder { color: var(--muted); }
+
+    .news-textarea:focus {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+    }
+
+    .input-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 1.2rem;
+    }
+
+    .input-row .field { flex: 1; margin-bottom: 0; }
+
+    .field input[type="url"] {
+        width: 100%;
+        background: var(--ink);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 0.65rem 1rem;
+        font-family: var(--font-sans);
+        font-size: 0.85rem;
+        color: var(--cream);
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .field input[type="url"]::placeholder { color: var(--muted); }
+
+    .field input[type="url"]:focus {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+    }
+
+    .btn--analyze {
+        background: var(--gold);
+        color: var(--ink);
+        padding: 0.7rem 1.8rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        border-radius: var(--radius);
+        white-space: nowrap;
+        border: none;
+        cursor: pointer;
+        font-family: var(--font-sans);
+        transition: background 0.2s, transform 0.15s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn--analyze:hover { background: #d9b85c; }
+    .btn--analyze:active { transform: scale(0.97); }
+
+    /* loading spinner inside button */
+    .spinner {
+        display: none;
+        width: 15px;
+        height: 15px;
+        border: 2px solid rgba(13,15,20,0.3);
+        border-top-color: var(--ink);
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── RESULT CARD ── */
+    .result-card {
+        background: var(--ink-2);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+        animation: fadeUp 0.4s ease both;
+    }
+
+    /* verdict banner */
+    .verdict {
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .verdict--real   { border-left: 4px solid var(--green); }
+    .verdict--fake   { border-left: 4px solid var(--red); }
+    .verdict--unsure { border-left: 4px solid var(--gold); }
+
+    .verdict__icon {
+        font-size: 2rem;
+        flex-shrink: 0;
+        line-height: 1;
+    }
+
+    .verdict__info { flex: 1; }
+
+    .verdict__label {
+        font-size: 0.68rem;
+        font-weight: 500;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 0.2rem;
+    }
+
+    .verdict__title {
+        font-family: var(--font-serif);
+        font-size: 1.5rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .verdict--real   .verdict__title { color: #5de4b0; }
+    .verdict--fake   .verdict__title { color: #f5aaaa; }
+    .verdict--unsure .verdict__title { color: #e8cd88; }
+
+    .verdict__score {
+        text-align: right;
+    }
+
+    .verdict__pct {
+        font-family: var(--font-serif);
+        font-size: 2.6rem;
+        font-weight: 900;
+        line-height: 1;
+    }
+
+    .verdict--real   .verdict__pct { color: #5de4b0; }
+    .verdict--fake   .verdict__pct { color: #f5aaaa; }
+    .verdict--unsure .verdict__pct { color: #e8cd88; }
+
+    .verdict__pct-label {
+        font-size: 0.72rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+
+    /* progress bar */
+    .cred-bar-wrap {
+        padding: 0 2rem 0;
+        margin-bottom: -1rem;
+    }
+
+    .cred-bar-track {
+        height: 5px;
+        background: var(--ink-3);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .cred-bar-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 1s cubic-bezier(.22,.61,.36,1);
+    }
+
+    /* result body */
+    .result-body {
+        padding: 2rem;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+
+    @media (max-width: 620px) {
+        .result-body { grid-template-columns: 1fr; }
+    }
+
+    .result-section__heading {
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .result-section__heading::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
+
+    /* explanation */
+    .explanation-text {
+        font-size: 0.88rem;
+        color: var(--muted-2);
+        line-height: 1.75;
+    }
+
+    /* key indicators */
+    .indicators { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        font-size: 0.82rem;
+        color: var(--muted-2);
+    }
+
+    .indicator__dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .dot--positive { background: var(--green); }
+    .dot--negative { background: var(--red); }
+    .dot--neutral  { background: var(--gold); }
+
+    /* sources */
+    .sources-col { grid-column: 1 / -1; }
+
+    .sources-list { display: flex; flex-direction: column; gap: 0.6rem; }
+
+    .source-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.8rem;
+        padding: 0.7rem 0.9rem;
+        background: var(--ink);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        text-decoration: none;
+        transition: border-color 0.2s, background 0.2s;
+    }
+
+    .source-item:hover {
+        border-color: var(--gold-dim);
+        background: rgba(201,168,76,0.05);
+    }
+
+    .source-favicon {
+        width: 16px;
+        height: 16px;
+        border-radius: 3px;
+        object-fit: contain;
+        flex-shrink: 0;
+        margin-top: 2px;
+        background: var(--border);
+    }
+
+    .source-info { flex: 1; min-width: 0; }
+
+    .source-name {
+        font-size: 0.82rem;
+        font-weight: 500;
+        color: var(--cream);
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .source-url {
+        font-size: 0.73rem;
+        color: var(--muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block;
+    }
+
+    .source-rel {
+        font-size: 0.7rem;
+        font-weight: 500;
+        padding: 2px 7px;
+        border-radius: 20px;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .rel--high   { background: rgba(42,157,111,0.18); color: #5de4b0; }
+    .rel--medium { background: rgba(201,168,76,0.18); color: #e8cd88; }
+    .rel--low    { background: rgba(90,98,128,0.3);   color: var(--muted-2); }
+
+    /* ── HISTORIAL ── */
+    .history-section {
+        margin-top: 2.5rem;
+        animation: fadeUp 0.5s 0.3s ease both;
+    }
+
+    .history-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .history-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+    .history-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem 1rem;
+        background: var(--ink-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        transition: border-color 0.2s;
+    }
+
+    .history-item:hover { border-color: var(--gold-dim); }
+
+    .history-badge {
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        padding: 3px 8px;
+        border-radius: 4px;
+        flex-shrink: 0;
+        width: 68px;
+        text-align: center;
+    }
+
+    .badge--real   { background: rgba(42,157,111,0.18); color: #5de4b0; }
+    .badge--fake   { background: rgba(201,76,76,0.18);  color: #f5aaaa; }
+    .badge--unsure { background: rgba(201,168,76,0.18); color: #e8cd88; }
+
+    .history-text {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+    }
+
+    .history-excerpt {
+        font-size: 0.82rem;
+        color: var(--muted-2);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .history-date {
+        font-size: 0.7rem;
+        color: var(--muted);
+    }
+
+    .history-score {
+        font-family: var(--font-serif);
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--muted-2);
+        flex-shrink: 0;
+    }
+
+    /* ── no-result placeholder ── */
+    .placeholder {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: var(--muted);
+    }
+
+    .placeholder__icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.4; }
+    .placeholder__text { font-size: 0.88rem; line-height: 1.7; }
+</style>
+</th:block>
+
+<div layout:fragment="content">
+<div class="home-wrap">
+
+    <!-- Flash messages -->
+    <div th:if="${error}"   class="alert alert--error"   th:text="${error}"></div>
+    <div th:if="${info}"    class="alert alert--info"    th:text="${info}"></div>
+
+    <!-- HERO -->
+    <section class="hero">
+        <p class="hero__eyebrow">Motor de verificación · NewsVerifier</p>
+        <h1 class="hero__title">¿Es esta noticia real?</h1>
+        <p class="hero__subtitle">
+            Introduce el texto o la URL de la noticia y nuestro modelo de IA
+            analizará su credibilidad en segundos.
+        </p>
+    </section>
+
+    <!-- INPUT CARD -->
+    <div class="input-card">
+        <form th:action="@{/verificar}" method="post" id="analyzeForm">
+
+            <div class="input-card__label">
+                <span>Texto de la noticia</span>
+                <span class="char-count" id="charCount">0 caracteres</span>
+            </div>
+            <textarea class="news-textarea"
+                      name="texto"
+                      id="newsText"
+                      placeholder="Pega aquí el titular y cuerpo de la noticia que quieres verificar…"
+                      maxlength="5000"
+                      th:text="${textoEnviado}"></textarea>
+
+            <div class="input-row">
+                <div class="field">
+                    <input type="url" name="url" id="newsUrl"
+                           placeholder="O introduce la URL del artículo (opcional)"
+                           th:value="${urlEnviada}"/>
+                </div>
+                <button type="submit" class="btn--analyze" id="analyzeBtn">
+                    <div class="spinner" id="btnSpinner"></div>
+                    <span id="btnText">Analizar →</span>
+                </button>
+            </div>
+
+        </form>
+    </div>
+
+    <!-- ── RESULT CARD ── -->
+
+    <!-- State A: result present -->
+    <div class="result-card" th:if="${resultado != null}">
+
+        <!-- Verdict banner -->
+        <div class="verdict"
+             th:classappend="${resultado.etiqueta == 'REAL'} ? 'verdict--real' :
+                              (${resultado.etiqueta == 'FAKE'} ? 'verdict--fake' : 'verdict--unsure')">
+            <div class="verdict__icon"
+                 th:text="${resultado.etiqueta == 'REAL'} ? '✅' :
+                           (${resultado.etiqueta == 'FAKE'} ? '🚫' : '⚠️')">✅</div>
+            <div class="verdict__info">
+                <div class="verdict__label">Veredicto del análisis</div>
+                <div class="verdict__title"
+                     th:text="${resultado.etiqueta == 'REAL'} ? 'Noticia Verificada' :
+                               (${resultado.etiqueta == 'FAKE'} ? 'Posible Fake News' : 'Resultado Incierto')">
+                    Noticia Verificada
+                </div>
+            </div>
+            <div class="verdict__score">
+                <div class="verdict__pct"
+                     th:text="${resultado.credibilidad} + '%'">87%</div>
+                <div class="verdict__pct-label">Credibilidad</div>
+            </div>
+        </div>
+
+        <!-- Credibility bar -->
+        <div class="cred-bar-wrap" style="padding-top:1rem;">
+            <div class="cred-bar-track">
+                <div class="cred-bar-fill"
+                     id="credBar"
+                     th:style="'background:' + (${resultado.etiqueta == 'REAL'} ? 'var(--green)' : (${resultado.etiqueta == 'FAKE'} ? 'var(--red)' : 'var(--gold)')) + '; width:0%'"
+                     th:attr="data-target=${resultado.credibilidad}">
+                </div>
+            </div>
+        </div>
+
+        <!-- Result body -->
+        <div class="result-body">
+
+            <!-- Explanation -->
+            <div>
+                <div class="result-section__heading">Explicación</div>
+                <p class="explanation-text" th:text="${resultado.explicacion}">
+                    El modelo ha identificado coherencia entre los hechos relatados
+                    y las fuentes contrastadas. El lenguaje es neutral y no se
+                    detectan patrones propios de desinformación.
+                </p>
+            </div>
+
+            <!-- Key indicators -->
+            <div>
+                <div class="result-section__heading">Indicadores clave</div>
+                <div class="indicators">
+                    <div class="indicator"
+                         th:each="ind : ${resultado.indicadores}">
+                        <div class="indicator__dot"
+                             th:classappend="${ind.tipo == 'positivo'} ? 'dot--positive' :
+                                             (${ind.tipo == 'negativo'} ? 'dot--negative' : 'dot--neutral')">
+                        </div>
+                        <span th:text="${ind.texto}">Fuentes citadas verificables</span>
+                    </div>
+
+                    <!-- Fallback if no indicators from model -->
+                    <div class="indicator" th:if="${resultado.indicadores == null or resultado.indicadores.empty}">
+                        <div class="indicator__dot dot--neutral"></div>
+                        <span>Sin indicadores adicionales disponibles</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sources -->
+            <div class="sources-col" th:if="${resultado.fuentes != null and not resultado.fuentes.empty}">
+                <div class="result-section__heading">Fuentes relacionadas</div>
+                <div class="sources-list">
+                    <a class="source-item"
+                       th:each="fuente : ${resultado.fuentes}"
+                       th:href="${fuente.url}"
+                       target="_blank" rel="noopener">
+                        <img class="source-favicon"
+                             th:src="'https://www.google.com/s2/favicons?sz=32&domain=' + ${fuente.dominio}"
+                             alt=""/>
+                        <div class="source-info">
+                            <span class="source-name"  th:text="${fuente.nombre}">Reuters</span>
+                            <span class="source-url"   th:text="${fuente.url}">https://reuters.com/…</span>
+                        </div>
+                        <span class="source-rel"
+                              th:classappend="${fuente.relevancia == 'alta'}   ? 'rel--high' :
+                                              (${fuente.relevancia == 'media'} ? 'rel--medium' : 'rel--low')"
+                              th:text="${fuente.relevancia == 'alta'}   ? 'Alta relevancia' :
+                                        (${fuente.relevancia == 'media'} ? 'Media relevancia' : 'Baja relevancia')">
+                            Alta relevancia
+                        </span>
+                    </a>
+                </div>
+            </div>
+
+        </div><!-- /result-body -->
+    </div>
+
+    <!-- State B: no result yet -->
+    <div class="result-card" th:if="${resultado == null}">
+        <div class="placeholder">
+            <div class="placeholder__icon">🔍</div>
+            <p class="placeholder__text">
+                El resultado del análisis aparecerá aquí.<br/>
+                Introduce una noticia arriba para empezar.
+            </p>
+        </div>
+    </div>
+
+    <!-- ── HISTORIAL RECIENTE ── -->
+    <div class="history-section" th:if="${historial != null and not historial.empty}">
+        <div class="history-header">
+            <span class="result-section__heading" style="margin-bottom:0">Análisis recientes</span>
+        </div>
+        <div class="history-list">
+            <div class="history-item"
+                 th:each="item : ${historial}">
+                <div class="history-badge"
+                     th:classappend="${item.etiqueta == 'REAL'} ? 'badge--real' :
+                                     (${item.etiqueta == 'FAKE'} ? 'badge--fake' : 'badge--unsure')"
+                     th:text="${item.etiqueta}">REAL</div>
+                <div class="history-text">
+                    <span class="history-excerpt"
+                          th:text="${item.texto != null and item.texto.length() > 80}
+                                   ? ${item.texto.substring(0,80)} + '…'
+                                   : (${item.texto != null} ? ${item.texto} : item.url)">
+                        Extracto de la noticia...
+                    </span>
+                    <span class="history-date"
+                          th:text="${#temporals.format(item.fechaAnalisis, 'dd/MM/yyyy HH:mm')}">
+                        01/01/2025 12:00
+                    </span>
+                </div>
+                <div class="history-score"
+                     th:text="${item.credibilidad} + '%'">82%</div>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /home-wrap -->
+
+<script>
+    /* character counter */
+    const textarea = document.getElementById('newsText');
+    const counter  = document.getElementById('charCount');
+    function updateCount() {
+        counter.textContent = textarea.value.length.toLocaleString('es') + ' caracteres';
+    }
+    textarea.addEventListener('input', updateCount);
+    updateCount();
+
+    /* loading state on submit */
+    document.getElementById('analyzeForm').addEventListener('submit', function() {
+        const btn     = document.getElementById('analyzeBtn');
+        const spinner = document.getElementById('btnSpinner');
+        const text    = document.getElementById('btnText');
+        btn.disabled = true;
+        spinner.style.display = 'block';
+        text.textContent = 'Analizando…';
+    });
+
+    /* animate credibility bar on load */
+    window.addEventListener('load', function() {
+        const bar = document.getElementById('credBar');
+        if (bar) {
+            const target = bar.dataset.target || 0;
+            requestAnimationFrame(() => {
+                setTimeout(() => { bar.style.width = target + '%'; }, 150);
+            });
+        }
+    });
+</script>
+</div>
+</html>

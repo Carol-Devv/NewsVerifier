@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<head>
+    <title>Acceso</title>
+</head>
+
+<th:block layout:fragment="head">
+<style>
+    /* ─── LOGIN PAGE ───────────────────────────────────── */
+    .auth-page {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        min-height: calc(100vh - 64px - 56px);
+    }
+
+    /* LEFT – brand panel */
+    .auth-brand {
+        background: var(--ink-2);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 4rem 3.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* decorative grid lines */
+    .auth-brand::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image:
+            linear-gradient(var(--border) 1px, transparent 1px),
+            linear-gradient(90deg, var(--border) 1px, transparent 1px);
+        background-size: 48px 48px;
+        opacity: 0.35;
+    }
+
+    .auth-brand__inner { position: relative; z-index: 1; }
+
+    .auth-brand__eyebrow {
+        font-size: 0.7rem;
+        font-weight: 500;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--gold);
+        margin-bottom: 1.2rem;
+    }
+
+    .auth-brand__title {
+        font-family: var(--font-serif);
+        font-size: 2.8rem;
+        font-weight: 900;
+        line-height: 1.1;
+        color: var(--cream);
+        margin-bottom: 1.5rem;
+    }
+
+    .auth-brand__title em {
+        font-style: italic;
+        color: var(--gold);
+    }
+
+    .auth-brand__desc {
+        font-size: 0.95rem;
+        color: var(--muted-2);
+        line-height: 1.7;
+        max-width: 340px;
+        margin-bottom: 2.5rem;
+    }
+
+    .auth-brand__stats {
+        display: flex;
+        gap: 2rem;
+    }
+
+    .stat { display: flex; flex-direction: column; gap: 0.2rem; }
+    .stat__val {
+        font-family: var(--font-serif);
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--cream);
+    }
+    .stat__label {
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--muted);
+    }
+
+    /* RIGHT – form panel */
+    .auth-form-panel {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem 2rem;
+    }
+
+    .auth-card {
+        width: 100%;
+        max-width: 420px;
+    }
+
+    /* tabs */
+    .auth-tabs {
+        display: flex;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 2rem;
+    }
+
+    .auth-tab {
+        flex: 1;
+        padding: 0.75rem 0;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--muted);
+        cursor: pointer;
+        text-align: center;
+        border-bottom: 2px solid transparent;
+        transition: color 0.2s, border-color 0.2s;
+        background: none;
+        border-top: none;
+        border-left: none;
+        border-right: none;
+        font-family: var(--font-sans);
+        letter-spacing: 0.02em;
+        margin-bottom: -1px;
+    }
+
+    .auth-tab.active {
+        color: var(--gold);
+        border-bottom-color: var(--gold);
+    }
+
+    /* form */
+    .form-section { display: none; }
+    .form-section.active { display: block; animation: fadeUp 0.3s ease; }
+
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-title {
+        font-family: var(--font-serif);
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--cream);
+        margin-bottom: 0.4rem;
+    }
+
+    .form-subtitle {
+        font-size: 0.85rem;
+        color: var(--muted-2);
+        margin-bottom: 2rem;
+    }
+
+    .field { margin-bottom: 1.2rem; }
+
+    .field label {
+        display: block;
+        font-size: 0.78rem;
+        font-weight: 500;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--muted-2);
+        margin-bottom: 0.45rem;
+    }
+
+    .field input {
+        width: 100%;
+        background: var(--ink-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 0.7rem 1rem;
+        font-family: var(--font-sans);
+        font-size: 0.9rem;
+        color: var(--cream);
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .field input::placeholder { color: var(--muted); }
+
+    .field input:focus {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 3px rgba(201,168,76,0.12);
+    }
+
+    .field input.error {
+        border-color: var(--red);
+        box-shadow: 0 0 0 3px rgba(201,76,76,0.12);
+    }
+
+    .field__error {
+        font-size: 0.78rem;
+        color: #f5aaaa;
+        margin-top: 0.35rem;
+        display: block;
+    }
+
+    .btn--full {
+        width: 100%;
+        justify-content: center;
+        padding: 0.8rem;
+        font-size: 0.92rem;
+        margin-top: 0.5rem;
+    }
+
+    .divider {
+        text-align: center;
+        font-size: 0.78rem;
+        color: var(--muted);
+        margin: 1.2rem 0;
+        position: relative;
+    }
+
+    .divider::before, .divider::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        width: 38%;
+        height: 1px;
+        background: var(--border);
+    }
+
+    .divider::before { left: 0; }
+    .divider::after  { right: 0; }
+
+    .form-note {
+        font-size: 0.78rem;
+        color: var(--muted);
+        text-align: center;
+        margin-top: 1.5rem;
+    }
+
+    /* password strength indicator */
+    .strength-bar {
+        height: 3px;
+        border-radius: 2px;
+        background: var(--border);
+        margin-top: 0.4rem;
+        overflow: hidden;
+    }
+
+    .strength-bar__fill {
+        height: 100%;
+        border-radius: 2px;
+        width: 0%;
+        transition: width 0.3s, background 0.3s;
+    }
+
+    @media (max-width: 768px) {
+        .auth-page { grid-template-columns: 1fr; }
+        .auth-brand { display: none; }
+    }
+</style>
+</th:block>
+
+<div layout:fragment="content">
+<div class="auth-page">
+
+    <!-- LEFT BRAND PANEL -->
+    <div class="auth-brand">
+        <div class="auth-brand__inner">
+            <p class="auth-brand__eyebrow">Servicio de Verificación</p>
+            <h1 class="auth-brand__title">
+                La verdad<br/>no debería<br/><em>ser opcional.</em>
+            </h1>
+            <p class="auth-brand__desc">
+                NewsVerifier analiza noticias con modelos de lenguaje avanzados,
+                ofreciéndote una estimación de credibilidad basada en evidencia
+                y fuentes contrastadas.
+            </p>
+            <div class="auth-brand__stats">
+                <div class="stat">
+                    <span class="stat__val">87%</span>
+                    <span class="stat__label">Precisión</span>
+                </div>
+                <div class="stat">
+                    <span class="stat__val">&lt;10s</span>
+                    <span class="stat__label">Análisis</span>
+                </div>
+                <div class="stat">
+                    <span class="stat__val">2K+</span>
+                    <span class="stat__label">Noticias verificadas</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT FORM PANEL -->
+    <div class="auth-form-panel">
+        <div class="auth-card">
+
+            <!-- Flash messages -->
+            <div th:if="${error}" class="alert alert--error" th:text="${error}"></div>
+            <div th:if="${success}" class="alert alert--success" th:text="${success}"></div>
+
+            <!-- TABS -->
+            <div class="auth-tabs">
+                <button class="auth-tab"
+                        id="tab-login"
+                        onclick="switchTab('login')"
+                        th:classappend="${activeTab == 'registro'} ? '' : 'active'">
+                    Iniciar sesión
+                </button>
+                <button class="auth-tab"
+                        id="tab-registro"
+                        onclick="switchTab('registro')"
+                        th:classappend="${activeTab == 'registro'} ? 'active' : ''">
+                    Crear cuenta
+                </button>
+            </div>
+
+            <!-- ── LOGIN FORM ── -->
+            <div class="form-section"
+                 id="form-login"
+                 th:classappend="${activeTab == 'registro'} ? '' : 'active'">
+
+                <h2 class="form-title">Bienvenido de nuevo</h2>
+                <p class="form-subtitle">Accede para empezar a verificar noticias.</p>
+
+                <form th:action="@{/login}" method="post">
+                    <div class="field">
+                        <label for="email">Correo electrónico</label>
+                        <input type="email" id="email" name="email"
+                               placeholder="tu@email.com"
+                               th:value="${loginEmail}"
+                               th:classappend="${loginError} ? 'error' : ''"
+                               required autocomplete="email"/>
+                        <span class="field__error"
+                              th:if="${loginError}" th:text="${loginError}"></span>
+                    </div>
+                    <div class="field">
+                        <label for="password">Contraseña</label>
+                        <input type="password" id="password" name="password"
+                               placeholder="••••••••"
+                               required autocomplete="current-password"/>
+                    </div>
+                    <button type="submit" class="btn btn--gold btn--full">
+                        Entrar →
+                    </button>
+                </form>
+
+                <div class="divider">o</div>
+
+                <p class="form-note">
+                    ¿No tienes cuenta?
+                    <a href="#" onclick="switchTab('registro')"
+                       style="color:var(--gold); text-decoration:none;">Regístrate gratis</a>
+                </p>
+            </div>
+
+            <!-- ── REGISTER FORM ── -->
+            <div class="form-section"
+                 id="form-registro"
+                 th:classappend="${activeTab == 'registro'} ? 'active' : ''">
+
+                <h2 class="form-title">Crear cuenta</h2>
+                <p class="form-subtitle">Acceso gratuito durante el período de investigación.</p>
+
+                <form th:action="@{/registro}" method="post" id="regForm">
+                    <div class="field">
+                        <label for="nombre">Nombre completo</label>
+                        <input type="text" id="nombre" name="nombre"
+                               placeholder="Ana García"
+                               th:value="${regNombre}"
+                               th:classappend="${regNombreError} ? 'error' : ''"
+                               required autocomplete="name"/>
+                        <span class="field__error"
+                              th:if="${regNombreError}" th:text="${regNombreError}"></span>
+                    </div>
+                    <div class="field">
+                        <label for="regEmail">Correo electrónico</label>
+                        <input type="email" id="regEmail" name="email"
+                               placeholder="tu@email.com"
+                               th:value="${regEmail}"
+                               th:classappend="${regEmailError} ? 'error' : ''"
+                               required autocomplete="email"/>
+                        <span class="field__error"
+                              th:if="${regEmailError}" th:text="${regEmailError}"></span>
+                    </div>
+                    <div class="field">
+                        <label for="regPassword">Contraseña</label>
+                        <input type="password" id="regPassword" name="password"
+                               placeholder="Mínimo 8 caracteres"
+                               oninput="checkStrength(this.value)"
+                               required autocomplete="new-password"
+                               minlength="8"/>
+                        <div class="strength-bar">
+                            <div class="strength-bar__fill" id="strengthFill"></div>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="confirmPassword">Confirmar contraseña</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword"
+                               placeholder="••••••••"
+                               required autocomplete="new-password"/>
+                        <span class="field__error" id="matchError" style="display:none">
+                            Las contraseñas no coinciden.
+                        </span>
+                    </div>
+                    <button type="submit" class="btn btn--gold btn--full">
+                        Crear cuenta →
+                    </button>
+                </form>
+
+                <p class="form-note">
+                    ¿Ya tienes cuenta?
+                    <a href="#" onclick="switchTab('login')"
+                       style="color:var(--gold); text-decoration:none;">Inicia sesión</a>
+                </p>
+            </div>
+
+        </div><!-- /auth-card -->
+    </div><!-- /auth-form-panel -->
+
+</div><!-- /auth-page -->
+
+<script>
+    function switchTab(tab) {
+        document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
+        document.getElementById('form-' + tab).classList.add('active');
+    }
+
+    function checkStrength(val) {
+        const fill = document.getElementById('strengthFill');
+        let score = 0;
+        if (val.length >= 8)               score++;
+        if (/[A-Z]/.test(val))             score++;
+        if (/[0-9]/.test(val))             score++;
+        if (/[^A-Za-z0-9]/.test(val))      score++;
+        const pct = (score / 4) * 100;
+        const colors = ['#c94c4c','#c9a84c','#c9a84c','#2a9d6f'];
+        fill.style.width = pct + '%';
+        fill.style.background = colors[score - 1] || 'transparent';
+    }
+
+    // Validate password match before submit
+    document.getElementById('regForm').addEventListener('submit', function(e) {
+        const pw  = document.getElementById('regPassword').value;
+        const cpw = document.getElementById('confirmPassword').value;
+        const err = document.getElementById('matchError');
+        if (pw !== cpw) {
+            e.preventDefault();
+            err.style.display = 'block';
+            document.getElementById('confirmPassword').classList.add('error');
+        } else {
+            err.style.display = 'none';
+        }
+    });
+</script>
+</div>
+</html>

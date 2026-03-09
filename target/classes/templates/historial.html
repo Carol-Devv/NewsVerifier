@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<head><title>Historial</title></head>
+
+<th:block layout:fragment="head">
+<style>
+    .historial-wrap {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 3.5rem 2rem 4rem;
+    }
+
+    /* ── Hero ── */
+    .hero {
+        margin-bottom: 2.5rem;
+        animation: fadeDown 0.5s ease both;
+    }
+
+    @keyframes fadeDown {
+        from { opacity:0; transform:translateY(-12px); }
+        to   { opacity:1; transform:translateY(0); }
+    }
+
+    .hero__eyebrow {
+        font-size: 0.7rem;
+        font-weight: 500;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--gold);
+        margin-bottom: 0.6rem;
+    }
+
+    .hero__title {
+        font-family: var(--font-serif);
+        font-size: clamp(1.8rem, 3vw, 2.4rem);
+        font-weight: 900;
+        color: var(--cream);
+        letter-spacing: -0.02em;
+        margin-bottom: 0.4rem;
+    }
+
+    .hero__subtitle {
+        font-size: 0.88rem;
+        color: var(--muted-2);
+    }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+        display: flex;
+        gap: 1px;
+        background: var(--border);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 2rem;
+        animation: fadeUp 0.4s 0.1s ease both;
+    }
+
+    @keyframes fadeUp {
+        from { opacity:0; transform:translateY(10px); }
+        to   { opacity:1; transform:translateY(0); }
+    }
+
+    .stat-box {
+        flex: 1;
+        background: var(--ink-2);
+        padding: 1.1rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+    .stat-box__val {
+        font-family: var(--font-serif);
+        font-size: 1.8rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+
+    .stat-box__label {
+        font-size: 0.7rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+    }
+
+    .val--total  { color: var(--cream); }
+    .val--real   { color: #5de4b0; }
+    .val--fake   { color: #f5aaaa; }
+    .val--unsure { color: #e8cd88; }
+
+    /* ── Filters ── */
+    .filters {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        animation: fadeUp 0.4s 0.15s ease both;
+    }
+
+    .filter-btn {
+        font-family: var(--font-sans);
+        font-size: 0.78rem;
+        font-weight: 500;
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--muted-2);
+        cursor: pointer;
+        transition: all 0.2s;
+        letter-spacing: 0.03em;
+    }
+
+    .filter-btn:hover { border-color: var(--gold-dim); color: var(--cream); }
+    .filter-btn.active { background: var(--gold); color: var(--ink); border-color: var(--gold); font-weight: 600; }
+
+    /* ── Table ── */
+    .historial-table-wrap {
+        background: var(--ink-2);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+        animation: fadeUp 0.4s 0.2s ease both;
+    }
+
+    .historial-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .historial-table thead tr {
+        border-bottom: 1px solid var(--border);
+    }
+
+    .historial-table th {
+        padding: 0.75rem 1.2rem;
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+        text-align: left;
+    }
+
+    .historial-table tbody tr {
+        border-bottom: 1px solid var(--border);
+        transition: background 0.15s;
+    }
+
+    .historial-table tbody tr:last-child { border-bottom: none; }
+    .historial-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+    .historial-table td {
+        padding: 1rem 1.2rem;
+        font-size: 0.85rem;
+        color: var(--muted-2);
+        vertical-align: middle;
+    }
+
+    /* Verdict badge */
+    .verdict-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        padding: 3px 10px;
+        border-radius: 4px;
+        white-space: nowrap;
+    }
+
+    .verdict-badge--real   { background: rgba(42,157,111,0.18); color: #5de4b0; }
+    .verdict-badge--fake   { background: rgba(201,76,76,0.18);  color: #f5aaaa; }
+    .verdict-badge--unsure { background: rgba(201,168,76,0.18); color: #e8cd88; }
+
+    /* Credibility score */
+    .cred-cell {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+    }
+
+    .cred-mini-bar {
+        width: 60px;
+        height: 4px;
+        background: var(--ink-3);
+        border-radius: 2px;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+
+    .cred-mini-fill {
+        height: 100%;
+        border-radius: 2px;
+    }
+
+    .fill--real   { background: var(--green); }
+    .fill--fake   { background: var(--red); }
+    .fill--unsure { background: var(--gold); }
+
+    .cred-num {
+        font-family: var(--font-serif);
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--cream);
+        min-width: 36px;
+    }
+
+    /* Excerpt */
+    .excerpt-cell {
+        max-width: 320px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: var(--muted-2);
+        font-size: 0.83rem;
+    }
+
+    .excerpt-cell em {
+        font-style: normal;
+        color: var(--muted);
+        font-size: 0.78rem;
+    }
+
+    /* Date */
+    .date-cell {
+        font-size: 0.78rem;
+        color: var(--muted);
+        white-space: nowrap;
+    }
+
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+
+    .empty-state__icon { font-size: 3rem; opacity: 0.3; margin-bottom: 1rem; }
+
+    .empty-state__text {
+        font-size: 0.9rem;
+        color: var(--muted);
+        line-height: 1.7;
+        margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 640px) {
+        .historial-table th:nth-child(3),
+        .historial-table td:nth-child(3) { display: none; }
+        .stats-bar { flex-wrap: wrap; }
+        .stat-box { min-width: 45%; }
+    }
+</style>
+</th:block>
+
+<div layout:fragment="content">
+<div class="historial-wrap">
+
+    <!-- HERO -->
+    <div class="hero">
+        <p class="hero__eyebrow">Tu actividad · NewsVerifier</p>
+        <h1 class="hero__title">Historial de análisis</h1>
+        <p class="hero__subtitle"
+           th:text="'Todos los análisis realizados por ' + ${session.usuario.nombre}">
+            Todos los análisis realizados
+        </p>
+    </div>
+
+    <!-- STATS BAR -->
+    <div class="stats-bar">
+        <div class="stat-box">
+            <span class="stat-box__val val--total"
+                  th:text="${totalAnalisis}">0</span>
+            <span class="stat-box__label">Total</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-box__val val--real"
+                  th:text="${totalReal}">0</span>
+            <span class="stat-box__label">Verificadas</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-box__val val--fake"
+                  th:text="${totalFake}">0</span>
+            <span class="stat-box__label">Fake News</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-box__val val--unsure"
+                  th:text="${totalIncierto}">0</span>
+            <span class="stat-box__label">Inciertas</span>
+        </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filters">
+        <button class="filter-btn active" onclick="filtrar('TODOS', this)">Todos</button>
+        <button class="filter-btn" onclick="filtrar('REAL', this)">✅ Verificadas</button>
+        <button class="filter-btn" onclick="filtrar('FAKE', this)">🚫 Fake News</button>
+        <button class="filter-btn" onclick="filtrar('INCIERTO', this)">⚠️ Inciertas</button>
+    </div>
+
+    <!-- TABLE -->
+    <div class="historial-table-wrap">
+
+        <!-- Con datos -->
+        <div th:if="${historial != null and not historial.empty}">
+            <table class="historial-table" id="historialTable">
+                <thead>
+                    <tr>
+                        <th>Veredicto</th>
+                        <th>Credibilidad</th>
+                        <th>Extracto</th>
+                        <th>Fecha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="item : ${historial}"
+                        th:attr="data-etiqueta=${item.etiqueta}">
+
+                        <!-- Veredicto -->
+                        <td>
+                            <span class="verdict-badge"
+                                  th:classappend="${item.etiqueta == 'REAL'}    ? 'verdict-badge--real' :
+                                                  (${item.etiqueta == 'FAKE'}   ? 'verdict-badge--fake' : 'verdict-badge--unsure')"
+                                  th:text="${item.etiqueta == 'REAL'}    ? '✅ REAL' :
+                                            (${item.etiqueta == 'FAKE'}   ? '🚫 FAKE' : '⚠️ INCIERTO')">
+                                REAL
+                            </span>
+                        </td>
+
+                        <!-- Credibilidad -->
+                        <td>
+                            <div class="cred-cell">
+                                <div class="cred-mini-bar">
+                                    <div class="cred-mini-fill"
+                                         th:classappend="${item.etiqueta == 'REAL'}  ? 'fill--real' :
+                                                         (${item.etiqueta == 'FAKE'} ? 'fill--fake' : 'fill--unsure')"
+                                         th:style="'width:' + ${item.credibilidad} + '%'">
+                                    </div>
+                                </div>
+                                <span class="cred-num" th:text="${item.credibilidad} + '%'">80%</span>
+                            </div>
+                        </td>
+
+                        <!-- Extracto -->
+                        <td class="excerpt-cell">
+                            <span th:if="${item.texto != null and not #strings.isEmpty(item.texto)}"
+                                  th:text="${#strings.length(item.texto) > 90}
+                                           ? ${#strings.substring(item.texto, 0, 90)} + '…'
+                                           : ${item.texto}">
+                                Extracto del texto analizado...
+                            </span>
+                            <em th:if="${item.texto == null or #strings.isEmpty(item.texto)}"
+                                th:text="${item.url != null} ? ${item.url} : 'Sin texto'">
+                                URL analizada
+                            </em>
+                        </td>
+
+                        <!-- Fecha -->
+                        <td class="date-cell"
+                            th:text="${#temporals.format(item.fechaAnalisis, 'dd/MM/yyyy HH:mm')}">
+                            01/01/2025 12:00
+                        </td>
+
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Sin datos -->
+        <div class="empty-state" th:if="${historial == null or historial.empty}">
+            <div class="empty-state__icon">📋</div>
+            <p class="empty-state__text">
+                Todavía no has analizado ninguna noticia.<br/>
+                ¡Empieza verificando una ahora!
+            </p>
+            <a class="btn btn--gold" th:href="@{/home}">Ir al verificador →</a>
+        </div>
+
+    </div><!-- /table-wrap -->
+
+</div><!-- /historial-wrap -->
+
+<script>
+    function filtrar(etiqueta, btn) {
+        // Actualizar botones activos
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Filtrar filas
+        const filas = document.querySelectorAll('#historialTable tbody tr');
+        filas.forEach(fila => {
+            const valor = fila.dataset.etiqueta;
+            fila.style.display = (etiqueta === 'TODOS' || valor === etiqueta) ? '' : 'none';
+        });
+    }
+</script>
+</div>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title layout:title-pattern="$CONTENT_TITLE — NewsVerifier">NewsVerifier</title>
+
+    <!-- Google Fonts: Playfair Display + DM Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous"/>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet"/>
+
+    <style>
+        /* ─── DESIGN TOKENS ─────────────────────────────── */
+        :root {
+            --ink:       #0d0f14;
+            --ink-2:     #1a1d26;
+            --ink-3:     #252936;
+            --border:    #2e3347;
+            --muted:     #5a6280;
+            --muted-2:   #8891aa;
+            --cream:     #f4f1eb;
+            --gold:      #c9a84c;
+            --gold-dim:  #8a6d2a;
+            --green:     #2a9d6f;
+            --green-dim: #1a5e44;
+            --red:       #c94c4c;
+            --red-dim:   #7a2222;
+            --radius:    6px;
+            --font-serif: 'Playfair Display', Georgia, serif;
+            --font-sans:  'DM Sans', system-ui, sans-serif;
+        }
+
+        /* ─── RESET / BASE ──────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { font-size: 16px; scroll-behavior: smooth; }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--ink);
+            color: var(--cream);
+            min-height: 100vh;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ─── TOPBAR ────────────────────────────────────── */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(13,15,20,0.92);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 2.5rem;
+            height: 64px;
+        }
+
+        .topbar__logo {
+            font-family: var(--font-serif);
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--cream);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .topbar__logo span { color: var(--gold); }
+
+        .topbar__badge {
+            font-size: 0.6rem;
+            font-weight: 500;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            border: 1px solid var(--border);
+            padding: 2px 7px;
+            border-radius: 20px;
+            margin-left: 0.6rem;
+            vertical-align: middle;
+        }
+
+        .topbar__nav {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .topbar__nav a {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--muted-2);
+            text-decoration: none;
+            letter-spacing: 0.02em;
+            transition: color 0.2s;
+        }
+
+        .topbar__nav a:hover { color: var(--cream); }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-family: var(--font-sans);
+            font-size: 0.85rem;
+            font-weight: 500;
+            padding: 0.5rem 1.2rem;
+            border-radius: var(--radius);
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s, color 0.2s, transform 0.15s;
+            letter-spacing: 0.02em;
+        }
+
+        .btn:active { transform: scale(0.97); }
+
+        .btn--ghost {
+            background: transparent;
+            color: var(--muted-2);
+            border: 1px solid var(--border);
+        }
+
+        .btn--ghost:hover { background: var(--ink-3); color: var(--cream); }
+
+        .btn--gold {
+            background: var(--gold);
+            color: var(--ink);
+        }
+
+        .btn--gold:hover { background: #d9b85c; }
+
+        /* ─── MAIN ──────────────────────────────────────── */
+        main { min-height: calc(100vh - 64px - 56px); }
+
+        /* ─── FOOTER ────────────────────────────────────── */
+        footer {
+            border-top: 1px solid var(--border);
+            padding: 1rem 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: var(--muted);
+            letter-spacing: 0.02em;
+        }
+
+        footer span { color: var(--gold); }
+
+        /* ─── ALERTS / FLASH ────────────────────────────── */
+        .alert {
+            padding: 0.75rem 1.2rem;
+            border-radius: var(--radius);
+            font-size: 0.85rem;
+            border-left: 3px solid;
+            margin-bottom: 1.5rem;
+        }
+
+        .alert--error   { background: rgba(201,76,76,0.12);  border-color: var(--red);   color: #f5aaaa; }
+        .alert--success { background: rgba(42,157,111,0.12); border-color: var(--green); color: #8de4c2; }
+        .alert--info    { background: rgba(201,168,76,0.10); border-color: var(--gold);  color: #e8cd88; }
+    </style>
+
+    <!-- Page-specific head content -->
+    <th:block layout:fragment="head"/>
+</head>
+<body>
+
+<!-- ─── TOPBAR ─────────────────────────────────────────── -->
+<header class="topbar">
+    <a class="topbar__logo" th:href="@{/home}">
+        News<span>Verifier</span>
+        <em class="topbar__badge">Beta</em>
+    </a>
+
+    <nav class="topbar__nav">
+        <!-- Shown only when authenticated -->
+        <th:block th:if="${session.usuario != null}">
+            <a th:href="@{/home}">Verificar</a>
+            <a th:href="@{/historial}">Historial</a>
+            <span style="color:var(--border)">|</span>
+            <span style="font-size:0.82rem; color:var(--muted-2)"
+                  th:text="${session.usuario.nombre}">Usuario</span>
+            <a class="btn btn--ghost" th:href="@{/logout}">Salir</a>
+        </th:block>
+        <th:block th:if="${session.usuario == null}">
+            <a class="btn btn--ghost" th:href="@{/login}">Iniciar sesión</a>
+            <a class="btn btn--gold"  th:href="@{/registro}">Registrarse</a>
+        </th:block>
+    </nav>
+</header>
+
+<!-- ─── PAGE CONTENT ───────────────────────────────────── -->
+<main>
+    <div layout:fragment="content">
+        <!-- Page content injected here -->
+    </div>
+</main>
+
+<!-- ─── FOOTER ────────────────────────────────────────── -->
+<footer>
+    <span>© 2026 NewsVerifier</span>
+    <span>TFG · Detección de Fake News con IA</span>
+</footer>
+
+</body>
+</html>
