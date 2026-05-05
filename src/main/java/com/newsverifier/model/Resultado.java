@@ -19,6 +19,7 @@ import java.util.List;
  *   - explicacion   → texto explicativo generado por la IA
  *   - indicadores   → señales detectadas (positivas/negativas/neutras)
  *   - fuentes       → fuentes relacionadas sugeridas por la IA
+ *   - titulo/texto/url → entrada original analizada (para mostrarla en la vista)
  */
 public class Resultado {
 
@@ -27,6 +28,9 @@ public class Resultado {
     private String          explicacion;
     private List<Indicador> indicadores;
     private List<Fuente>    fuentes;
+     private String          titulo;        // Título original analizado
+     private String          texto;         // Cuerpo original analizado
+     private String          url;           // URL original analizada
 
     // ── Constructores ─────────────────────────────────────────
 
@@ -57,6 +61,16 @@ public class Resultado {
 
     public List<Fuente>    getFuentes()                    { return fuentes; }
     public void            setFuentes(List<Fuente> v)      { this.fuentes = v; }
+
+    // Comentario: estos campos permiten mostrar al usuario qué datos se analizaron.
+    public String          getTitulo()                     { return titulo; }
+    public void            setTitulo(String v)             { this.titulo = v; }
+
+    public String          getTexto()                      { return texto; }
+    public void            setTexto(String v)              { this.texto = v; }
+
+    public String          getUrl()                        { return url; }
+    public void            setUrl(String v)                { this.url = v; }
 
     // =========================================================
     // CLASES INTERNAS

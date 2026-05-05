@@ -29,6 +29,10 @@ public class Analisis {
     @Column(length = 2000)
     private String texto;
 
+    /** Título de la noticia analizada (truncado a 300 caracteres) */
+    @Column(length = 300)
+    private String titulo;
+
     /** URL enviada para análisis, si se proporcionó */
     @Column(length = 500)
     private String url;
@@ -62,9 +66,11 @@ public class Analisis {
     public Analisis() {}
 
     /** Constructor principal usado desde MainController al persistir un análisis */
-    public Analisis(String texto, String url, String etiqueta,
+    public Analisis(String titulo, String texto, String url, String etiqueta,
                     int credibilidad, String explicacion, Usuario usuario) {
-        // Truncar texto y explicación para no sobrecargar la BBDD
+        // Comentario: truncamos campos largos para no sobrecargar la BBDD.
+        this.titulo      = titulo != null && titulo.length() > 300
+                           ? titulo.substring(0, 300) : titulo;
         this.texto       = texto != null && texto.length() > 2000
                            ? texto.substring(0, 2000) : texto;
         this.url         = url;
@@ -82,6 +88,9 @@ public class Analisis {
 
     public String        getTexto()                         { return texto; }
     public void          setTexto(String v)                 { this.texto = v; }
+
+    public String        getTitulo()                        { return titulo; }
+    public void          setTitulo(String v)                { this.titulo = v; }
 
     public String        getUrl()                           { return url; }
     public void          setUrl(String v)                   { this.url = v; }

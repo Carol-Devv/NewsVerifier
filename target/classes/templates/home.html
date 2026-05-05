@@ -121,7 +121,8 @@
 
     .input-row .field { flex: 1; margin-bottom: 0; }
 
-    .field input[type="url"] {
+    .field input[type="url"],
+    .field input[type="text"] {
         width: 100%;
         background: var(--ink);
         border: 1px solid var(--border);
@@ -134,9 +135,11 @@
         transition: border-color 0.2s, box-shadow 0.2s;
     }
 
-    .field input[type="url"]::placeholder { color: var(--muted); }
+    .field input[type="url"]::placeholder,
+    .field input[type="text"]::placeholder { color: var(--muted); }
 
-    .field input[type="url"]:focus {
+    .field input[type="url"]:focus,
+    .field input[type="text"]:focus {
         border-color: var(--gold);
         box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
     }
@@ -328,6 +331,22 @@
     /* sources */
     .sources-col { grid-column: 1 / -1; }
 
+    /* Datos analizados (título/texto/url) */
+    .analysis-input { grid-column: 1 / -1; }
+    .analysis-input__row {
+        font-size: 0.82rem;
+        color: var(--muted-2);
+        margin-bottom: 0.5rem;
+        word-break: break-word;
+    }
+    .analysis-input__label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--muted);
+        margin-right: 0.4rem;
+    }
+
     .sources-list { display: flex; flex-direction: column; gap: 0.6rem; }
 
     .source-item {
@@ -495,6 +514,17 @@
     <div class="input-card">
         <form th:action="@{/verificar}" method="post" id="analyzeForm">
 
+            <!-- Comentario: campo para el título, usado como contexto extra del modelo. -->
+            <div class="input-card__label">
+                <span>Título de la noticia</span>
+            </div>
+            <div class="field" style="margin-bottom:1rem;">
+                <input type="text" name="titulo" id="newsTitle"
+                       placeholder="Escribe el titular (opcional, pero recomendable)"
+                       maxlength="300"
+                       th:value="${tituloEnviado}"/>
+            </div>
+
             <div class="input-card__label">
                 <span>Texto de la noticia</span>
                 <span class="char-count" id="charCount">0 caracteres</span>
@@ -593,6 +623,32 @@
                 </div>
             </div>
 
+            <!-- Comentario: mostramos los datos analizados para trazabilidad del usuario. -->
+            <div class="analysis-input">
+                <div class="result-section__heading">Noticia analizada</div>
+                <div class="analysis-input__row" th:if="${resultado.titulo != null and not #strings.isEmpty(resultado.titulo)}">
+                    <span class="analysis-input__label">Título</span>
+                    <span th:text="${resultado.titulo}">Título de ejemplo</span>
+                </div>
+                <div class="analysis-input__row" th:if="${resultado.texto != null and not #strings.isEmpty(resultado.texto)}">
+                    <span class="analysis-input__label">Texto</span>
+                    <span th:text="${#strings.length(resultado.texto) > 240}
+                                    ? ${#strings.substring(resultado.texto, 0, 240)} + '…'
+                                    : ${resultado.texto}">
+                        Extracto del texto analizado
+                    </span>
+                </div>
+                <div class="analysis-input__row" th:if="${resultado.url != null and not #strings.isEmpty(resultado.url)}">
+                    <span class="analysis-input__label">URL</span>
+                    <span th:text="${resultado.url}">https://ejemplo.com</span>
+                </div>
+                <div class="analysis-input__row" th:if="${(resultado.titulo == null or #strings.isEmpty(resultado.titulo))
+                                                        and (resultado.texto == null or #strings.isEmpty(resultado.texto))
+                                                        and (resultado.url == null or #strings.isEmpty(resultado.url))}">
+                    <span>Sin datos de entrada disponibles</span>
+                </div>
+            </div>
+
             <!-- Sources -->
             <div class="sources-col" th:if="${resultado.fuentes != null and not resultado.fuentes.empty}">
                 <div class="result-section__heading">Fuentes relacionadas</div>
@@ -647,9 +703,13 @@
                      th:text="${item.etiqueta}">REAL</div>
                 <div class="history-text">
                     <span class="history-excerpt"
-                          th:text="${item.texto != null and item.texto.length() > 80}
-                                   ? ${item.texto.substring(0,80)} + '…'
-                                   : (${item.texto != null} ? ${item.texto} : item.url)">
+                                  th:text="${item.titulo != null and item.titulo.length() > 80}
+                                              ? ${item.titulo.substring(0,80)} + '…'
+                                              : (${item.titulo != null}
+                                                  ? ${item.titulo}
+                                                  : (${item.texto != null and item.texto.length() > 80}
+                                                      ? ${item.texto.substring(0,80)} + '…'
+                                                      : (${item.texto != null} ? ${item.texto} : item.url)))">
                         Extracto de la noticia...
                     </span>
                     <span class="history-date"

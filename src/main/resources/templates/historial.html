@@ -349,13 +349,22 @@
 
                         <!-- Extracto -->
                         <td class="excerpt-cell">
-                            <span th:if="${item.texto != null and not #strings.isEmpty(item.texto)}"
+                            <!-- Comentario: priorizamos título, luego texto y finalmente URL. -->
+                            <span th:if="${item.titulo != null and not #strings.isEmpty(item.titulo)}"
+                                  th:text="${#strings.length(item.titulo) > 90}
+                                           ? ${#strings.substring(item.titulo, 0, 90)} + '…'
+                                           : ${item.titulo}">
+                                Título analizado...
+                            </span>
+                            <span th:if="${(item.titulo == null or #strings.isEmpty(item.titulo))
+                                           and item.texto != null and not #strings.isEmpty(item.texto)}"
                                   th:text="${#strings.length(item.texto) > 90}
                                            ? ${#strings.substring(item.texto, 0, 90)} + '…'
                                            : ${item.texto}">
                                 Extracto del texto analizado...
                             </span>
-                            <em th:if="${item.texto == null or #strings.isEmpty(item.texto)}"
+                            <em th:if="${(item.titulo == null or #strings.isEmpty(item.titulo))
+                                        and (item.texto == null or #strings.isEmpty(item.texto))}"
                                 th:text="${item.url != null} ? ${item.url} : 'Sin texto'">
                                 URL analizada
                             </em>

@@ -198,32 +198,36 @@ public class MainController {
      *   4. Devuelve la vista con el resultado y el historial actualizado
      */
     @PostMapping("/verificar")
-    public String verificar(@RequestParam(required = false) String texto,
+    public String verificar(@RequestParam(required = false) String titulo,
+                            @RequestParam(required = false) String texto,
                             @RequestParam(required = false) String url,
                             HttpSession session,
                             Model model) {
 
         if (usuarioSesion(session) == null) return "redirect:/login";
 
-        // Validar que se ha introducido al menos texto o URL
-        if ((texto == null || texto.isBlank()) && (url == null || url.isBlank())) {
-            model.addAttribute("error", "Introduce el texto o la URL de la noticia.");
+        // Comentario: validamos que haya título, texto o URL para analizar.
+        if ((titulo == null || titulo.isBlank())
+                && (texto == null || texto.isBlank())
+                && (url == null || url.isBlank())) {
+            model.addAttribute("error", "Introduce el título, el texto o la URL de la noticia.");
             return "home";
         }
 
         try {
             // Llamar al servicio de análisis (API Python o mock si no está disponible)
-            Resultado resultado = verificadorService.analizar(texto, url);
+            Resultado resultado = verificadorService.analizar(titulo, texto, url);
 
             // Pasar resultado y datos del formulario a la vista
             model.addAttribute("resultado",    resultado);
-            model.addAttribute("textoEnviado", texto);
-            model.addAttribute("urlEnviada",   url);
+            model.addAttribute("tituloEnviado", titulo);
+            model.addAttribute("textoEnviado",  texto);
+            model.addAttribute("urlEnviada",    url);
 
             // Persistir el análisis en H2 vinculado al usuario actual
             Usuario usuario = usuarioSesion(session);
-            Analisis analisis = new Analisis(
-                    texto, url,
+                Analisis analisis = new Analisis(
+                    titulo, texto, url,
                     resultado.getEtiqueta(),
                     resultado.getCredibilidad(),
                     resultado.getExplicacion(),
