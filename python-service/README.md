@@ -19,7 +19,7 @@ Response JSON:
 ```
 {
   "etiqueta": "REAL|FAKE|INCIERTO",
-  "credibilidad": 0,
+  "credibilidad": 0.0,
   "explicacion": "...",
   "indicadores": [
     { "tipo": "positivo|negativo|neutro", "texto": "..." }
@@ -27,6 +27,8 @@ Response JSON:
   "fuentes": []
 }
 ```
+
+Nota: `credibilidad` es el score crudo del modelo (0-1), no un porcentaje.
 
 ## Ejecucion local
 

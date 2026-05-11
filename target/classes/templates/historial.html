@@ -313,7 +313,7 @@
                 <thead>
                     <tr>
                         <th>Veredicto</th>
-                        <th>Credibilidad</th>
+                        <th>Score</th>
                         <th>Extracto</th>
                         <th>Fecha</th>
                     </tr>
@@ -335,15 +335,20 @@
 
                         <!-- Credibilidad -->
                         <td>
+                            <!-- Comentario: la barra usa porcentaje, el texto muestra el score crudo. -->
                             <div class="cred-cell">
                                 <div class="cred-mini-bar">
-                                    <div class="cred-mini-fill"
-                                         th:classappend="${item.etiqueta == 'REAL'}  ? 'fill--real' :
-                                                         (${item.etiqueta == 'FAKE'} ? 'fill--fake' : 'fill--unsure')"
-                                         th:style="'width:' + ${item.credibilidad} + '%'">
+                                        <div class="cred-mini-fill"
+                                             th:classappend="${item.etiqueta == 'REAL'}  ? 'fill--real' :
+                                                             (${item.etiqueta == 'FAKE'} ? 'fill--fake' : 'fill--unsure')"
+                                             th:style="'width:' + (${item.etiqueta == 'FAKE'} ? ${(1 - item.credibilidad) * 100} : ${item.credibilidad * 100}) + '%'">
+                                        </div>
+                                    </div>
+                                    <span class="cred-num"
+                                          th:text="${item.etiqueta == 'FAKE'} ? 1 - ${item.credibilidad} : ${item.credibilidad}">0.80</span>
                                     </div>
                                 </div>
-                                <span class="cred-num" th:text="${item.credibilidad} + '%'">80%</span>
+                                <span class="cred-num" th:text="${item.credibilidad}">0.80</span>
                             </div>
                         </td>
 

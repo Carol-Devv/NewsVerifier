@@ -572,19 +572,23 @@
                 </div>
             </div>
             <div class="verdict__score">
-                <div class="verdict__pct"
-                     th:text="${resultado.credibilidad} + '%'">87%</div>
-                <div class="verdict__pct-label">Credibilidad</div>
+                <!-- Comentario: mostramos el score crudo del modelo (0-1), sin porcentaje. -->
+                 <div class="verdict__pct"
+                     th:text="${resultado.etiqueta == 'REAL'} ? ${resultado.credibilidad} :
+                             (${resultado.etiqueta == 'FAKE'} ? 1 - ${resultado.credibilidad} : '0.5')">0.87</div>
+                <div class="verdict__pct-label">Score del modelo</div>
             </div>
         </div>
 
         <!-- Credibility bar -->
         <div class="cred-bar-wrap" style="padding-top:1rem;">
             <div class="cred-bar-track">
+                <!-- Comentario: la barra sigue usando porcentaje, por eso multiplicamos por 100. -->
                 <div class="cred-bar-fill"
                      id="credBar"
                      th:style="'background:' + (${resultado.etiqueta == 'REAL'} ? 'var(--green)' : (${resultado.etiqueta == 'FAKE'} ? 'var(--red)' : 'var(--gold)')) + '; width:0%'"
-                     th:attr="data-target=${resultado.credibilidad}">
+                     th:attr="data-target=${resultado.etiqueta == 'REAL'} ? ${resultado.credibilidad * 100} :
+                                      (${resultado.etiqueta == 'FAKE'} ? ${(1 - resultado.credibilidad) * 100} : 50)">
                 </div>
             </div>
         </div>
@@ -717,8 +721,9 @@
                         01/01/2025 12:00
                     </span>
                 </div>
-                <div class="history-score"
-                     th:text="${item.credibilidad} + '%'">82%</div>
+                 <!-- Comentario: si es FAKE, mostramos 1 - score para coherencia visual. -->
+                 <div class="history-score"
+                     th:text="${item.etiqueta == 'FAKE'} ? 1 - ${item.credibilidad} : ${item.credibilidad}">0.82</div>
             </div>
         </div>
     </div>

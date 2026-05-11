@@ -41,8 +41,8 @@ public class Analisis {
     @Column(nullable = false, length = 20)
     private String etiqueta;
 
-    /** Porcentaje de credibilidad devuelto por la IA (0-100) */
-    private int credibilidad;
+    /** Score crudo de la IA (0-1) */
+    private double credibilidad;
 
     /** Explicación resumida del análisis (truncada a 1000 caracteres) */
     @Column(length = 1000)
@@ -67,7 +67,7 @@ public class Analisis {
 
     /** Constructor principal usado desde MainController al persistir un análisis */
     public Analisis(String titulo, String texto, String url, String etiqueta,
-                    int credibilidad, String explicacion, Usuario usuario) {
+                    double credibilidad, String explicacion, Usuario usuario) {
         // Comentario: truncamos campos largos para no sobrecargar la BBDD.
         this.titulo      = titulo != null && titulo.length() > 300
                            ? titulo.substring(0, 300) : titulo;
@@ -98,8 +98,8 @@ public class Analisis {
     public String        getEtiqueta()                      { return etiqueta; }
     public void          setEtiqueta(String v)              { this.etiqueta = v; }
 
-    public int           getCredibilidad()                  { return credibilidad; }
-    public void          setCredibilidad(int v)             { this.credibilidad = v; }
+    public double        getCredibilidad()                  { return credibilidad; }
+    public void          setCredibilidad(double v)          { this.credibilidad = v; }
 
     public String        getExplicacion()                   { return explicacion; }
     public void          setExplicacion(String v)           { this.explicacion = v; }

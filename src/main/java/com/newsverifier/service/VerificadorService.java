@@ -36,7 +36,7 @@ import java.util.List;
  * Respuesta 200 OK:
  *   {
  *     "etiqueta":      "REAL" | "FAKE" | "INCIERTO",
- *     "credibilidad":  0-100,
+ *     "credibilidad":  0-1 (score crudo),
  *     "explicacion":   "Texto explicativo...",
  *     "indicadores": [
  *       { "tipo": "positivo" | "negativo" | "neutro", "texto": "..." }
@@ -162,7 +162,8 @@ public class VerificadorService {
 
         // Campos principales
         String etiqueta    = root.path("etiqueta").asText("INCIERTO");
-        int    credibilidad= root.path("credibilidad").asInt(50);
+        // Comentario: el score llega en rango 0-1 (no porcentaje).
+        double credibilidad= root.path("credibilidad").asDouble(0.0);
         String explicacion = root.path("explicacion").asText("Sin explicación disponible.");
 
         // Lista de indicadores (señales detectadas en el texto)

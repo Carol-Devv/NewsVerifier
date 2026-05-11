@@ -7,19 +7,21 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
+import requests
+from bs4 import BeautifulSoup
 from transformers import pipeline
 
-# Comentario: servicio FastAPI que expone /analizar para el backend Java.
+# servicio FastAPI que expone /analizar para el backend Java.
 app = FastAPI(title="NewsVerifier IA", version="1.0.0")
 logger = logging.getLogger("newsverifier")
 
-# Comentario: el modelo se configura por variable de entorno para facilitar despliegue.
+# el modelo se configura por variable de entorno para facilitar despliegue.
 MODEL_NAME = os.getenv(
     "MODEL_NAME",
     "Narrativaai/fake-news-detection-spanish",
 )
 
-# Comentario: pipeline de clasificacion de texto en castellano.
+# pipeline de clasificacion de texto en castellano.
 classifier = pipeline(
     task="text-classification",
     model=MODEL_NAME,
@@ -28,13 +30,13 @@ classifier = pipeline(
 
 
 class Indicador(BaseModel):
-    # Comentario: indicador interpretable para mostrar en la UI.
+    # indicador interpretable para mostrar en la UI.
     tipo: str = Field(..., description="positivo|negativo|neutro")
     texto: str = Field(..., description="descripcion corta")
 
 
 class Fuente(BaseModel):
-    # Comentario: se deja disponible para futuras integraciones con fuentes reales.
+    # se deja disponible para futuras integraciones con fuentes reales.
     nombre: str
     url: str
     dominio: str
@@ -42,35 +44,53 @@ class Fuente(BaseModel):
 
 
 class AnalisisRequest(BaseModel):
-    # Comentario: contrato esperado por el backend Java.
+    # contrato esperado por el backend Java.
     titulo: Optional[str] = ""
     texto: Optional[str] = ""
     url: Optional[str] = ""
 
 
 class AnalisisResponse(BaseModel):
-    # Comentario: contrato de respuesta consumido por VerificadorService.
+    # contrato de respuesta consumido por VerificadorService.
     etiqueta: str
-    credibilidad: int
+    credibilidad: float
     explicacion: str
     indicadores: List[Indicador]
     fuentes: List[Fuente]
 
 
-def _construir_texto(titulo: str, texto: str, url: str) -> str:
-    # Comentario: concatenamos para dar mas contexto al modelo.
+def _extraer_texto_url(url: str) -> str:
+    # extrae texto visible de una URL para alimentar el modelo.
+    headers = {
+        "User-Agent": "NewsVerifierBot/1.0 (+https://example.com)",
+    }
+    try:
+        respuesta = requests.get(url, headers=headers, timeout=10)
+        respuesta.raise_for_status()
+    except requests.RequestException as exc:
+        logger.warning("No se pudo descargar la URL=%s Error=%s", url, exc)
+        return ""
+
+    soup = BeautifulSoup(respuesta.text, "html.parser")
+    for tag in soup(["script", "style", "noscript"]):
+        tag.decompose()
+
+    texto = " ".join(soup.stripped_strings)
+    return texto
+
+
+def _construir_texto(titulo: str, texto: str) -> str:
+    # concatenamos para dar mas contexto al modelo.
     partes = []
     if titulo:
         partes.append(titulo.strip())
     if texto:
         partes.append(texto.strip())
-    if url:
-        partes.append(url.strip())
     return "\n\n".join([p for p in partes if p])
 
 
 def _mapear_etiqueta(model_label: str) -> str:
-    # Comentario: normalizamos etiquetas comunes a REAL/FAKE/INCIERTO.
+    # normalizamos etiquetas comunes a REAL/FAKE/INCIERTO.
     l = model_label.lower()
     if "fake" in l:
         return "FAKE"
@@ -81,7 +101,7 @@ def _mapear_etiqueta(model_label: str) -> str:
 
 @app.get("/health")
 def healthcheck() -> dict:
-    # Comentario: endpoint simple para verificar que el servicio esta vivo.
+    # endpoint simple para verificar que el servicio esta vivo.
     return {"status": "ok", "model": MODEL_NAME}
 
 
@@ -89,7 +109,7 @@ def healthcheck() -> dict:
 async def validation_exception_handler(
     request: Request, exc: RequestValidationError
 ) -> JSONResponse:
-    # Comentario: registramos detalles del 422 para depurar el contrato.
+    # registramos detalles del 422 para depurar el contrato.
     body = await request.body()
     logger.warning("Validacion fallida en /analizar. Body=%s Errors=%s", body, exc.errors())
     return JSONResponse(status_code=422, content={"detail": exc.errors()})
@@ -97,23 +117,31 @@ async def validation_exception_handler(
 
 @app.post("/analizar", response_model=AnalisisResponse)
 def analizar(payload: AnalisisRequest) -> AnalisisResponse:
-    # Comentario: validamos que haya alguna entrada antes de invocar el modelo.
+    # validamos que haya alguna entrada antes de invocar el modelo.
     if not (payload.titulo or payload.texto or payload.url):
         raise HTTPException(status_code=400, detail="Falta titulo, texto o URL")
 
-    texto_modelo = _construir_texto(payload.titulo, payload.texto, payload.url)
+    texto = payload.texto or ""
+    if payload.url and not texto:
+        # Comentario: si solo llega URL, extraemos el contenido para el modelo.
+        texto = _extraer_texto_url(payload.url)
+        if not texto:
+            raise HTTPException(status_code=400, detail="No se pudo extraer texto de la URL")
 
-    # Comentario: inferencia directa del modelo; devuelve label y score.
+    texto_modelo = _construir_texto(payload.titulo, texto)
+
+    # inferencia directa del modelo; devuelve label y score.
     salida = classifier(texto_modelo)[0]
     etiqueta = _mapear_etiqueta(salida.get("label", ""))
-    score = float(salida.get("score", 0.0))
-    credibilidad = int(round(score * 100))
+    # Comentario: devolvemos el score crudo del modelo, sin convertir a porcentaje.
+    credibilidad = float(salida.get("score", 0.0))
 
-    # Comentario: si la confianza es baja, marcamos como INCIERTO.
-    if credibilidad < 60:
+    # si la confianza es baja, marcamos como INCIERTO.
+    # Comentario: umbral en score crudo 0-1 (0.6 equivale a 60%).
+    if credibilidad < 0.6:
         etiqueta = "INCIERTO"
 
-    # Comentario: explicacion corta basada en el resultado del modelo.
+    # explicacion corta basada en el resultado del modelo.
     if etiqueta == "REAL":
         explicacion = (
             "El modelo detecta patrones compatibles con una noticia verificada. "
@@ -141,7 +169,7 @@ def analizar(payload: AnalisisRequest) -> AnalisisResponse:
             Indicador(tipo="neutro", texto="Confianza insuficiente para decidir"),
         ]
 
-    # Comentario: de momento no se devuelven fuentes reales.
+    # de momento no se devuelven fuentes reales.
     fuentes: List[Fuente] = []
 
     return AnalisisResponse(

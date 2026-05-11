@@ -15,7 +15,7 @@ import java.util.List;
  *
  * Campos principales:
  *   - etiqueta      → veredicto: "REAL", "FAKE" o "INCIERTO"
- *   - credibilidad  → porcentaje 0-100
+ *   - credibilidad  → score crudo 0-1 devuelto por el modelo
  *   - explicacion   → texto explicativo generado por la IA
  *   - indicadores   → señales detectadas (positivas/negativas/neutras)
  *   - fuentes       → fuentes relacionadas sugeridas por la IA
@@ -24,19 +24,19 @@ import java.util.List;
 public class Resultado {
 
     private String          etiqueta;      // "REAL" | "FAKE" | "INCIERTO"
-    private int             credibilidad;  // 0 – 100
+    private double          credibilidad;  // score crudo 0 – 1
     private String          explicacion;
     private List<Indicador> indicadores;
     private List<Fuente>    fuentes;
-     private String          titulo;        // Título original analizado
-     private String          texto;         // Cuerpo original analizado
-     private String          url;           // URL original analizada
+    private String          titulo;        // Título original analizado
+    private String          texto;         // Cuerpo original analizado
+    private String          url;           // URL original analizada
 
     // ── Constructores ─────────────────────────────────────────
 
     public Resultado() {}
 
-    public Resultado(String etiqueta, int credibilidad, String explicacion,
+    public Resultado(String etiqueta, double credibilidad, String explicacion,
                      List<Indicador> indicadores, List<Fuente> fuentes) {
         this.etiqueta     = etiqueta;
         this.credibilidad = credibilidad;
@@ -50,8 +50,8 @@ public class Resultado {
     public String          getEtiqueta()                   { return etiqueta; }
     public void            setEtiqueta(String v)           { this.etiqueta = v; }
 
-    public int             getCredibilidad()               { return credibilidad; }
-    public void            setCredibilidad(int v)          { this.credibilidad = v; }
+    public double          getCredibilidad()               { return credibilidad; }
+    public void            setCredibilidad(double v)       { this.credibilidad = v; }
 
     public String          getExplicacion()                { return explicacion; }
     public void            setExplicacion(String v)        { this.explicacion = v; }
