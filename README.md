@@ -13,17 +13,23 @@
 
 ---
 
-## Arrancar la aplicación
+## Arrancar la aplicación (modo actual con IA)
 
 ```bash
-# 1. Clonar / descomprimir el proyecto
-cd newsverifier
+# 1. Microservicio Python (IA)
+cd python-service
+# Si no existe el entorno virtual:
+# python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app:app --host 0.0.0.0 --port 5000
 
-# 2. Compilar y lanzar
+# 2. Backend + Web (Spring Boot)
+cd ..
 mvn spring-boot:run
 ```
 
-La aplicación estará disponible en: **http://localhost:8080**
+La web estará disponible en: **http://localhost:8080**
 
 ---
 
@@ -36,24 +42,6 @@ La aplicación estará disponible en: **http://localhost:8080**
 
 ---
 
-## Modo Mock vs API real
-
-En `src/main/resources/application.properties`:
-
-```properties
-# true  → usa datos simulados (no necesita la API Python)
-# false → llama a la API Python; si falla, cae al mock
-ia.mock.enabled=true
-
-# URL de la API Python cuando esté disponible
-ia.api.url=http://localhost:5000/analizar
-```
-
-Con `ia.mock.enabled=true` la aplicación funciona completamente
-sin necesitar la API Python. Ideal para desarrollo del front.
-
----
-
 ## Contrato esperado de la API Python
 
 ```
@@ -61,8 +49,9 @@ POST /analizar
 Content-Type: application/json
 
 {
-  "texto": "Texto de la noticia...",
-  "url":   "https://..."
+  "titulo": "Titular de la noticia...",
+  "texto":  "Texto de la noticia...",
+  "url":    "https://..."
 }
 ```
 
@@ -71,7 +60,7 @@ Respuesta esperada:
 ```json
 {
   "etiqueta":     "REAL",
-  "credibilidad": 87,
+  "credibilidad": 0.87,
   "explicacion":  "El texto presenta...",
   "indicadores": [
     { "tipo": "positivo", "texto": "Fuentes verificables citadas" },
@@ -92,6 +81,7 @@ Valores posibles:
 - `etiqueta`: `REAL` | `FAKE` | `INCIERTO`
 - `relevancia`: `alta` | `media` | `baja`
 - `tipo` (indicador): `positivo` | `negativo` | `neutro`
+- `credibilidad`: score crudo del modelo (0-1)
 
 ---
 

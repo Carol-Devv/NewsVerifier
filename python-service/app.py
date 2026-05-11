@@ -7,8 +7,6 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
-import requests
-from bs4 import BeautifulSoup
 from transformers import pipeline
 
 # servicio FastAPI que expone /analizar para el backend Java.
@@ -59,33 +57,15 @@ class AnalisisResponse(BaseModel):
     fuentes: List[Fuente]
 
 
-def _extraer_texto_url(url: str) -> str:
-    # extrae texto visible de una URL para alimentar el modelo.
-    headers = {
-        "User-Agent": "NewsVerifierBot/1.0 (+https://example.com)",
-    }
-    try:
-        respuesta = requests.get(url, headers=headers, timeout=10)
-        respuesta.raise_for_status()
-    except requests.RequestException as exc:
-        logger.warning("No se pudo descargar la URL=%s Error=%s", url, exc)
-        return ""
-
-    soup = BeautifulSoup(respuesta.text, "html.parser")
-    for tag in soup(["script", "style", "noscript"]):
-        tag.decompose()
-
-    texto = " ".join(soup.stripped_strings)
-    return texto
-
-
-def _construir_texto(titulo: str, texto: str) -> str:
+def _construir_texto(titulo: str, texto: str, url: str) -> str:
     # concatenamos para dar mas contexto al modelo.
     partes = []
     if titulo:
         partes.append(titulo.strip())
     if texto:
         partes.append(texto.strip())
+    if url:
+        partes.append(url.strip())
     return "\n\n".join([p for p in partes if p])
 
 
@@ -121,14 +101,7 @@ def analizar(payload: AnalisisRequest) -> AnalisisResponse:
     if not (payload.titulo or payload.texto or payload.url):
         raise HTTPException(status_code=400, detail="Falta titulo, texto o URL")
 
-    texto = payload.texto or ""
-    if payload.url and not texto:
-        # Comentario: si solo llega URL, extraemos el contenido para el modelo.
-        texto = _extraer_texto_url(payload.url)
-        if not texto:
-            raise HTTPException(status_code=400, detail="No se pudo extraer texto de la URL")
-
-    texto_modelo = _construir_texto(payload.titulo, texto)
+    texto_modelo = _construir_texto(payload.titulo, payload.texto, payload.url)
 
     # inferencia directa del modelo; devuelve label y score.
     salida = classifier(texto_modelo)[0]
