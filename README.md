@@ -20,7 +20,7 @@
 cd python-service
 # Si no existe el entorno virtual:
 # python -m venv .venv
-source .venv/bin/activate
+source ../.venv/bin/activate
 pip install -r requirements.txt
 uvicorn app:app --host 0.0.0.0 --port 5000
 
@@ -51,7 +51,7 @@ Content-Type: application/json
 {
   "titulo": "Titular de la noticia...",
   "texto":  "Texto de la noticia...",
-  "url":    "https://..."
+  "fuente": "El Pais"
 }
 ```
 

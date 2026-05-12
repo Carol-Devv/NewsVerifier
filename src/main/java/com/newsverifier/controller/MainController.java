@@ -192,7 +192,7 @@ public class MainController {
      * Procesa el formulario de verificación de noticias.
      *
      * Flujo:
-     *   1. Valida que haya texto o URL
+    *   1. Valida que haya texto o título
      *   2. Llama a VerificadorService (API Python o mock)
      *   3. Persiste el resultado en la BBDD
      *   4. Devuelve la vista con el resultado y el historial actualizado
@@ -200,34 +200,33 @@ public class MainController {
     @PostMapping("/verificar")
     public String verificar(@RequestParam(required = false) String titulo,
                             @RequestParam(required = false) String texto,
-                            @RequestParam(required = false) String url,
+                            @RequestParam(required = false) String fuente,
                             HttpSession session,
                             Model model) {
 
         if (usuarioSesion(session) == null) return "redirect:/login";
 
-        // Comentario: validamos que haya título, texto o URL para analizar.
+        // Comentario: validamos que haya título o texto para analizar.
         if ((titulo == null || titulo.isBlank())
-                && (texto == null || texto.isBlank())
-                && (url == null || url.isBlank())) {
-            model.addAttribute("error", "Introduce el título, el texto o la URL de la noticia.");
+                && (texto == null || texto.isBlank())) {
+            model.addAttribute("error", "Introduce el título o el texto de la noticia.");
             return "home";
         }
 
         try {
             // Llamar al servicio de análisis (API Python o mock si no está disponible)
-            Resultado resultado = verificadorService.analizar(titulo, texto, url);
+            Resultado resultado = verificadorService.analizar(titulo, texto, fuente);
 
             // Pasar resultado y datos del formulario a la vista
             model.addAttribute("resultado",    resultado);
             model.addAttribute("tituloEnviado", titulo);
             model.addAttribute("textoEnviado",  texto);
-            model.addAttribute("urlEnviada",    url);
+            model.addAttribute("fuenteEnviada", fuente);
 
             // Persistir el análisis en H2 vinculado al usuario actual
             Usuario usuario = usuarioSesion(session);
                 Analisis analisis = new Analisis(
-                    titulo, texto, url,
+                    titulo, texto, fuente,
                     resultado.getEtiqueta(),
                     resultado.getCredibilidad(),
                     resultado.getExplicacion(),

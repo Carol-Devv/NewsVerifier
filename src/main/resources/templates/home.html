@@ -121,7 +121,7 @@
 
     .input-row .field { flex: 1; margin-bottom: 0; }
 
-    .field input[type="url"],
+    .field select,
     .field input[type="text"] {
         width: 100%;
         background: var(--ink);
@@ -135,10 +135,9 @@
         transition: border-color 0.2s, box-shadow 0.2s;
     }
 
-    .field input[type="url"]::placeholder,
     .field input[type="text"]::placeholder { color: var(--muted); }
 
-    .field input[type="url"]:focus,
+    .field select:focus,
     .field input[type="text"]:focus {
         border-color: var(--gold);
         box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
@@ -331,7 +330,7 @@
     /* sources */
     .sources-col { grid-column: 1 / -1; }
 
-    /* Datos analizados (título/texto/url) */
+    /* Datos analizados (título/texto/fuente) */
     .analysis-input { grid-column: 1 / -1; }
     .analysis-input__row {
         font-size: 0.82rem;
@@ -505,7 +504,7 @@
         <p class="hero__eyebrow">Motor de verificación · NewsVerifier</p>
         <h1 class="hero__title">¿Es esta noticia real?</h1>
         <p class="hero__subtitle">
-            Introduce el texto o la URL de la noticia y nuestro modelo de IA
+            Introduce el texto y la fuente de la noticia y nuestro modelo de IA
             analizará su credibilidad en segundos.
         </p>
     </section>
@@ -538,9 +537,84 @@
 
             <div class="input-row">
                 <div class="field">
-                    <input type="url" name="url" id="newsUrl"
-                           placeholder="O introduce la URL del artículo (opcional)"
-                           th:value="${urlEnviada}"/>
+                    <select name="fuente" id="newsSource">
+                        <option value="" th:selected="${fuenteEnviada == null or #strings.isEmpty(fuenteEnviada)}">Selecciona la fuente (opcional)</option>
+                        <option value="Otro" th:selected="${fuenteEnviada == 'Otro'}">Otro</option>
+                        <option value="20 Minutos" th:selected="${fuenteEnviada == '20 Minutos'}">20 Minutos</option>
+                        <option value="ABC" th:selected="${fuenteEnviada == 'ABC'}">ABC</option>
+                        <option value="Agencia EFE" th:selected="${fuenteEnviada == 'Agencia EFE'}">Agencia EFE</option>
+                        <option value="Agencia SINC" th:selected="${fuenteEnviada == 'Agencia SINC'}">Agencia SINC</option>
+                        <option value="Animal Politico" th:selected="${fuenteEnviada == 'Animal Politico'}">Animal Politico</option>
+                        <option value="Ara" th:selected="${fuenteEnviada == 'Ara'}">Ara</option>
+                        <option value="AS" th:selected="${fuenteEnviada == 'AS'}">AS</option>
+                        <option value="BBC News Mundo" th:selected="${fuenteEnviada == 'BBC News Mundo'}">BBC News Mundo</option>
+                        <option value="Cadena SER" th:selected="${fuenteEnviada == 'Cadena SER'}">Cadena SER</option>
+                        <option value="Canarias7" th:selected="${fuenteEnviada == 'Canarias7'}">Canarias7</option>
+                        <option value="CNN en Espanol" th:selected="${fuenteEnviada == 'CNN en Espanol'}">CNN en Espanol</option>
+                        <option value="Ciclismo a Fondo" th:selected="${fuenteEnviada == 'Ciclismo a Fondo'}">Ciclismo a Fondo</option>
+                        <option value="Cinco Dias" th:selected="${fuenteEnviada == 'Cinco Dias'}">Cinco Dias</option>
+                        <option value="Clarin" th:selected="${fuenteEnviada == 'Clarin'}">Clarin</option>
+                        <option value="Consalud" th:selected="${fuenteEnviada == 'Consalud'}">Consalud</option>
+                        <option value="Cronica Global" th:selected="${fuenteEnviada == 'Cronica Global'}">Cronica Global</option>
+                        <option value="CTXT" th:selected="${fuenteEnviada == 'CTXT'}">CTXT</option>
+                        <option value="Diario de Navarra" th:selected="${fuenteEnviada == 'Diario de Navarra'}">Diario de Navarra</option>
+                        <option value="Diario Medico" th:selected="${fuenteEnviada == 'Diario Medico'}">Diario Medico</option>
+                        <option value="Diario Vasco" th:selected="${fuenteEnviada == 'Diario Vasco'}">Diario Vasco</option>
+                        <option value="Diario.es" th:selected="${fuenteEnviada == 'Diario.es'}">Diario.es</option>
+                        <option value="DW Espanol" th:selected="${fuenteEnviada == 'DW Espanol'}">DW Espanol</option>
+                        <option value="El Comercio" th:selected="${fuenteEnviada == 'El Comercio'}">El Comercio</option>
+                        <option value="El Confidencial" th:selected="${fuenteEnviada == 'El Confidencial'}">El Confidencial</option>
+                        <option value="El Diario" th:selected="${fuenteEnviada == 'El Diario'}">El Diario</option>
+                        <option value="El Espanol" th:selected="${fuenteEnviada == 'El Espanol'}">El Espanol</option>
+                        <option value="El Financiero" th:selected="${fuenteEnviada == 'El Financiero'}">El Financiero</option>
+                        <option value="El Independiente" th:selected="${fuenteEnviada == 'El Independiente'}">El Independiente</option>
+                        <option value="El Mundo" th:selected="${fuenteEnviada == 'El Mundo'}">El Mundo</option>
+                        <option value="El Nacional" th:selected="${fuenteEnviada == 'El Nacional'}">El Nacional</option>
+                        <option value="El Orden Mundial" th:selected="${fuenteEnviada == 'El Orden Mundial'}">El Orden Mundial</option>
+                        <option value="El País" th:selected="${fuenteEnviada == 'El País'}">El País</option>
+                        <option value="El Periodico" th:selected="${fuenteEnviada == 'El Periodico'}">El Periodico</option>
+                        <option value="Estadio Deportivo" th:selected="${fuenteEnviada == 'Estadio Deportivo'}">Estadio Deportivo</option>
+                        <option value="Ethic" th:selected="${fuenteEnviada == 'Ethic'}">Ethic</option>
+                        <option value="Euronews Espanol" th:selected="${fuenteEnviada == 'Euronews Espanol'}">Euronews Espanol</option>
+                        <option value="Expansion" th:selected="${fuenteEnviada == 'Expansion'}">Expansion</option>
+                        <option value="Faro de Vigo" th:selected="${fuenteEnviada == 'Faro de Vigo'}">Faro de Vigo</option>
+                        <option value="France 24 Espanol" th:selected="${fuenteEnviada == 'France 24 Espanol'}">France 24 Espanol</option>
+                        <option value="Gaceta Medica" th:selected="${fuenteEnviada == 'Gaceta Medica'}">Gaceta Medica</option>
+                        <option value="Gigantes del Basket" th:selected="${fuenteEnviada == 'Gigantes del Basket'}">Gigantes del Basket</option>
+                        <option value="Heraldo de Aragon" th:selected="${fuenteEnviada == 'Heraldo de Aragon'}">Heraldo de Aragon</option>
+                        <option value="Hipertextual" th:selected="${fuenteEnviada == 'Hipertextual'}">Hipertextual</option>
+                        <option value="Ideal" th:selected="${fuenteEnviada == 'Ideal'}">Ideal</option>
+                        <option value="Infobae" th:selected="${fuenteEnviada == 'Infobae'}">Infobae</option>
+                        <option value="Infosalus" th:selected="${fuenteEnviada == 'Infosalus'}">Infosalus</option>
+                        <option value="Infolibre" th:selected="${fuenteEnviada == 'Infolibre'}">Infolibre</option>
+                        <option value="Jot Down" th:selected="${fuenteEnviada == 'Jot Down'}">Jot Down</option>
+                        <option value="La Nacion" th:selected="${fuenteEnviada == 'La Nacion'}">La Nacion</option>
+                        <option value="La Vanguardia" th:selected="${fuenteEnviada == 'La Vanguardia'}">La Vanguardia</option>
+                        <option value="La Voz de Galicia" th:selected="${fuenteEnviada == 'La Voz de Galicia'}">La Voz de Galicia</option>
+                        <option value="Levante-EMV" th:selected="${fuenteEnviada == 'Levante-EMV'}">Levante-EMV</option>
+                        <option value="Marca" th:selected="${fuenteEnviada == 'Marca'}">Marca</option>
+                        <option value="Medicina Responsable" th:selected="${fuenteEnviada == 'Medicina Responsable'}">Medicina Responsable</option>
+                        <option value="Milenio" th:selected="${fuenteEnviada == 'Milenio'}">Milenio</option>
+                        <option value="Mundo Deportivo" th:selected="${fuenteEnviada == 'Mundo Deportivo'}">Mundo Deportivo</option>
+                        <option value="Muy Interesante" th:selected="${fuenteEnviada == 'Muy Interesante'}">Muy Interesante</option>
+                        <option value="Nius Diario" th:selected="${fuenteEnviada == 'Nius Diario'}">Nius Diario</option>
+                        <option value="Publico" th:selected="${fuenteEnviada == 'Publico'}">Publico</option>
+                        <option value="Redaccion Medica" th:selected="${fuenteEnviada == 'Redaccion Medica'}">Redaccion Medica</option>
+                        <option value="Reforma" th:selected="${fuenteEnviada == 'Reforma'}">Reforma</option>
+                        <option value="Relevo" th:selected="${fuenteEnviada == 'Relevo'}">Relevo</option>
+                        <option value="RTVE Noticias" th:selected="${fuenteEnviada == 'RTVE Noticias'}">RTVE Noticias</option>
+                        <option value="Runner's World Espana" th:selected="${fuenteEnviada == 'Runner\'s World Espana'}">Runner&#39;s World Espana</option>
+                        <option value="Semana" th:selected="${fuenteEnviada == 'Semana'}">Semana</option>
+                        <option value="SINC" th:selected="${fuenteEnviada == 'SINC'}">SINC</option>
+                        <option value="Solo Bici" th:selected="${fuenteEnviada == 'Solo Bici'}">Solo Bici</option>
+                        <option value="Sport" th:selected="${fuenteEnviada == 'Sport'}">Sport</option>
+                        <option value="Superdeporte" th:selected="${fuenteEnviada == 'Superdeporte'}">Superdeporte</option>
+                        <option value="Sur" th:selected="${fuenteEnviada == 'Sur'}">Sur</option>
+                        <option value="Swissinfo en Espanol" th:selected="${fuenteEnviada == 'Swissinfo en Espanol'}">Swissinfo en Espanol</option>
+                        <option value="The Conversation Espana" th:selected="${fuenteEnviada == 'The Conversation Espana'}">The Conversation Espana</option>
+                        <option value="Vozpopuli" th:selected="${fuenteEnviada == 'Vozpopuli'}">Vozpopuli</option>
+                        <option value="Xataka" th:selected="${fuenteEnviada == 'Xataka'}">Xataka</option>
+                    </select>
                 </div>
                 <button type="submit" class="btn--analyze" id="analyzeBtn">
                     <div class="spinner" id="btnSpinner"></div>
@@ -642,13 +716,13 @@
                         Extracto del texto analizado
                     </span>
                 </div>
-                <div class="analysis-input__row" th:if="${resultado.url != null and not #strings.isEmpty(resultado.url)}">
-                    <span class="analysis-input__label">URL</span>
-                    <span th:text="${resultado.url}">https://ejemplo.com</span>
+                <div class="analysis-input__row" th:if="${resultado.fuente != null and not #strings.isEmpty(resultado.fuente)}">
+                    <span class="analysis-input__label">Fuente</span>
+                    <span th:text="${resultado.fuente}">El Pais</span>
                 </div>
                 <div class="analysis-input__row" th:if="${(resultado.titulo == null or #strings.isEmpty(resultado.titulo))
                                                         and (resultado.texto == null or #strings.isEmpty(resultado.texto))
-                                                        and (resultado.url == null or #strings.isEmpty(resultado.url))}">
+                                                        and (resultado.fuente == null or #strings.isEmpty(resultado.fuente))}">
                     <span>Sin datos de entrada disponibles</span>
                 </div>
             </div>
@@ -713,7 +787,7 @@
                                                   ? ${item.titulo}
                                                   : (${item.texto != null and item.texto.length() > 80}
                                                       ? ${item.texto.substring(0,80)} + '…'
-                                                      : (${item.texto != null} ? ${item.texto} : item.url)))">
+                                                      : (${item.texto != null} ? ${item.texto} : item.fuente)))">
                         Extracto de la noticia...
                     </span>
                     <span class="history-date"

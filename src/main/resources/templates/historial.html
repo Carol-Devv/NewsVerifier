@@ -338,23 +338,20 @@
                             <!-- Comentario: la barra usa porcentaje, el texto muestra el score crudo. -->
                             <div class="cred-cell">
                                 <div class="cred-mini-bar">
-                                        <div class="cred-mini-fill"
-                                             th:classappend="${item.etiqueta == 'REAL'}  ? 'fill--real' :
-                                                             (${item.etiqueta == 'FAKE'} ? 'fill--fake' : 'fill--unsure')"
-                                             th:style="'width:' + (${item.etiqueta == 'FAKE'} ? ${(1 - item.credibilidad) * 100} : ${item.credibilidad * 100}) + '%'">
-                                        </div>
-                                    </div>
-                                    <span class="cred-num"
-                                          th:text="${item.etiqueta == 'FAKE'} ? 1 - ${item.credibilidad} : ${item.credibilidad}">0.80</span>
+                                    <div class="cred-mini-fill"
+                                         th:classappend="${item.etiqueta == 'REAL'}  ? 'fill--real' :
+                                                         (${item.etiqueta == 'FAKE'} ? 'fill--fake' : 'fill--unsure')"
+                                         th:style="'width:' + (${item.etiqueta == 'FAKE'} ? ${(1 - item.credibilidad) * 100} : ${item.credibilidad * 100}) + '%'">
                                     </div>
                                 </div>
-                                <span class="cred-num" th:text="${item.credibilidad}">0.80</span>
+                                <span class="cred-num"
+                                      th:text="${item.etiqueta == 'FAKE'} ? 1 - ${item.credibilidad} : ${item.credibilidad}">0.80</span>
                             </div>
                         </td>
 
                         <!-- Extracto -->
                         <td class="excerpt-cell">
-                            <!-- Comentario: priorizamos título, luego texto y finalmente URL. -->
+                            <!-- Comentario: priorizamos título, luego texto y finalmente fuente. -->
                             <span th:if="${item.titulo != null and not #strings.isEmpty(item.titulo)}"
                                   th:text="${#strings.length(item.titulo) > 90}
                                            ? ${#strings.substring(item.titulo, 0, 90)} + '…'
@@ -370,8 +367,8 @@
                             </span>
                             <em th:if="${(item.titulo == null or #strings.isEmpty(item.titulo))
                                         and (item.texto == null or #strings.isEmpty(item.texto))}"
-                                th:text="${item.url != null} ? ${item.url} : 'Sin texto'">
-                                URL analizada
+                                th:text="${item.fuente != null} ? ${item.fuente} : 'Sin texto'">
+                                Fuente analizada
                             </em>
                         </td>
 

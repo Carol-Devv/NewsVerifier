@@ -31,7 +31,7 @@ import java.util.List;
  * Petición:
  *   POST /analizar
  *   Content-Type: application/json
- *   { "titulo": "...", "texto": "...", "url": "..." }
+ *   { "titulo": "...", "texto": "...", "fuente": "..." }
  *
  * Respuesta 200 OK:
  *   {
@@ -91,18 +91,18 @@ public class VerificadorService {
      * Nota: se eliminan los datos simulados para que el TFG use
      * siempre el modelo real (Hugging Face vía microservicio Python).
      *
-     * @param titulo Título de la noticia (puede ser null si se aporta texto/url)
-     * @param texto Texto de la noticia (puede ser null si se aporta url)
-     * @param url   URL del artículo (puede ser null si se aporta texto)
+    * @param titulo Título de la noticia (puede ser null si se aporta texto)
+    * @param texto Texto de la noticia (puede ser null si se aporta título)
+    * @param fuente Fuente seleccionada (puede ser null si no se elige)
      * @return Resultado con etiqueta, credibilidad, explicación, indicadores y fuentes
      */
-    public Resultado analizar(String titulo, String texto, String url) throws Exception {
-        // Comentario: enviamos titulo+texto+url para maximizar contexto del modelo.
-        Resultado resultado = llamarApi(titulo, texto, url);
+    public Resultado analizar(String titulo, String texto, String fuente) throws Exception {
+        // Comentario: enviamos titulo+texto+fuente para maximizar contexto del modelo.
+        Resultado resultado = llamarApi(titulo, texto, fuente);
         // Comentario: guardamos la entrada original para mostrarla en la vista.
         resultado.setTitulo(titulo);
         resultado.setTexto(texto);
-        resultado.setUrl(url);
+        resultado.setFuente(fuente);
         return resultado;
     }
 
@@ -115,13 +115,13 @@ public class VerificadorService {
      *
      * @throws Exception si la API no responde o devuelve un error HTTP
      */
-        private Resultado llamarApi(String titulo, String texto, String url) throws Exception {
+        private Resultado llamarApi(String titulo, String texto, String fuente) throws Exception {
         // Comentario: construimos el JSON y lo registramos para depurar errores 422.
         String body = objectMapper.writeValueAsString(
                 new ApiRequest(
                 titulo != null ? titulo : "",
                 texto  != null ? texto  : "",
-                url    != null ? url    : ""
+            fuente != null ? fuente : ""
                 )
         );
         log.debug("[VerificadorService] Payload enviado a IA: {}", body);
@@ -198,5 +198,5 @@ public class VerificadorService {
     // ── DTO interno para serializar la petición a la API ─────
 
     /** Representa el cuerpo JSON que se envía a la API Python */
-    private record ApiRequest(String titulo, String texto, String url) {}
+    private record ApiRequest(String titulo, String texto, String fuente) {}
 }

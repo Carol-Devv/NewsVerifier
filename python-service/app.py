@@ -45,7 +45,7 @@ class AnalisisRequest(BaseModel):
     # contrato esperado por el backend Java.
     titulo: Optional[str] = ""
     texto: Optional[str] = ""
-    url: Optional[str] = ""
+    fuente: Optional[str] = ""
 
 
 class AnalisisResponse(BaseModel):
@@ -57,15 +57,13 @@ class AnalisisResponse(BaseModel):
     fuentes: List[Fuente]
 
 
-def _construir_texto(titulo: str, texto: str, url: str) -> str:
+def _construir_texto(titulo: str, texto: str) -> str:
     # concatenamos para dar mas contexto al modelo.
     partes = []
     if titulo:
         partes.append(titulo.strip())
     if texto:
         partes.append(texto.strip())
-    if url:
-        partes.append(url.strip())
     return "\n\n".join([p for p in partes if p])
 
 
@@ -98,10 +96,10 @@ async def validation_exception_handler(
 @app.post("/analizar", response_model=AnalisisResponse)
 def analizar(payload: AnalisisRequest) -> AnalisisResponse:
     # validamos que haya alguna entrada antes de invocar el modelo.
-    if not (payload.titulo or payload.texto or payload.url):
-        raise HTTPException(status_code=400, detail="Falta titulo, texto o URL")
+    if not (payload.titulo or payload.texto):
+        raise HTTPException(status_code=400, detail="Falta titulo o texto")
 
-    texto_modelo = _construir_texto(payload.titulo, payload.texto, payload.url)
+    texto_modelo = _construir_texto(payload.titulo, payload.texto)
 
     # inferencia directa del modelo; devuelve label y score.
     salida = classifier(texto_modelo)[0]
@@ -136,7 +134,7 @@ def analizar(payload: AnalisisRequest) -> AnalisisResponse:
     else:
         explicacion = (
             "El modelo no alcanza un nivel de confianza suficiente. "
-            "Aporta mas texto o una URL completa para un analisis mejor."
+            "Aporta mas texto o un titulo mas claro para un analisis mejor."
         )
         indicadores = [
             Indicador(tipo="neutro", texto="Confianza insuficiente para decidir"),

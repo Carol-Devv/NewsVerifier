@@ -33,9 +33,9 @@ public class Analisis {
     @Column(length = 300)
     private String titulo;
 
-    /** URL enviada para análisis, si se proporcionó */
-    @Column(length = 500)
-    private String url;
+    /** Fuente seleccionada por el usuario (medio/organismo) */
+    @Column(length = 120)
+    private String fuente;
 
     /** Veredicto de la IA: "REAL", "FAKE" o "INCIERTO" */
     @Column(nullable = false, length = 20)
@@ -66,14 +66,14 @@ public class Analisis {
     public Analisis() {}
 
     /** Constructor principal usado desde MainController al persistir un análisis */
-    public Analisis(String titulo, String texto, String url, String etiqueta,
+    public Analisis(String titulo, String texto, String fuente, String etiqueta,
                     double credibilidad, String explicacion, Usuario usuario) {
         // Comentario: truncamos campos largos para no sobrecargar la BBDD.
         this.titulo      = titulo != null && titulo.length() > 300
                            ? titulo.substring(0, 300) : titulo;
         this.texto       = texto != null && texto.length() > 2000
                            ? texto.substring(0, 2000) : texto;
-        this.url         = url;
+        this.fuente      = fuente;
         this.etiqueta    = etiqueta;
         this.credibilidad= credibilidad;
         this.explicacion = explicacion != null && explicacion.length() > 1000
@@ -92,8 +92,8 @@ public class Analisis {
     public String        getTitulo()                        { return titulo; }
     public void          setTitulo(String v)                { this.titulo = v; }
 
-    public String        getUrl()                           { return url; }
-    public void          setUrl(String v)                   { this.url = v; }
+    public String        getFuente()                        { return fuente; }
+    public void          setFuente(String v)                { this.fuente = v; }
 
     public String        getEtiqueta()                      { return etiqueta; }
     public void          setEtiqueta(String v)              { this.etiqueta = v; }

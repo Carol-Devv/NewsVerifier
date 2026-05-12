@@ -11,7 +11,7 @@ Request JSON:
 {
   "titulo": "...",
   "texto": "...",
-  "url": "..."
+  "fuente": "..."
 }
 ```
 
