@@ -124,7 +124,7 @@
         background: var(--ink-2);
         border: 1px solid var(--border);
         border-radius: 10px;
-        overflow: hidden;
+        overflow: auto;
         animation: fadeUp 0.4s 0.2s ease both;
     }
 
@@ -345,7 +345,7 @@
                                     </div>
                                 </div>
                                 <span class="cred-num"
-                                      th:text="${item.etiqueta == 'FAKE'} ? 1 - ${item.credibilidad} : ${item.credibilidad}">0.80</span>
+                                      th:text="${#numbers.formatDecimal(item.etiqueta == 'FAKE' ? 1 - item.credibilidad : item.credibilidad, 1, 5)}">0.80</span>
                             </div>
                         </td>
 

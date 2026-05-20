@@ -242,10 +242,11 @@
     .verdict--unsure .verdict__pct { color: #e8cd88; }
 
     .verdict__pct-label {
-        font-size: 0.72rem;
+        font-size: 0.78rem;
         color: var(--muted);
         text-transform: uppercase;
         letter-spacing: 0.08em;
+        margin-top: 0.4rem;
     }
 
     /* progress bar */
@@ -618,7 +619,7 @@
                 </div>
                 <button type="submit" class="btn--analyze" id="analyzeBtn">
                     <div class="spinner" id="btnSpinner"></div>
-                    <span id="btnText">Analizar →</span>
+                    <span id="btnText">Analizar</span>
                 </button>
             </div>
 
@@ -645,12 +646,11 @@
                     Noticia Verificada
                 </div>
             </div>
-            <div class="verdict__score">
-                <!-- Comentario: mostramos el score crudo del modelo (0-1), sin porcentaje. -->
-                 <div class="verdict__pct"
-                     th:text="${resultado.etiqueta == 'REAL'} ? ${resultado.credibilidad} :
-                             (${resultado.etiqueta == 'FAKE'} ? 1 - ${resultado.credibilidad} : '0.5')">0.87</div>
+            <div class="verdict__score" style="display:flex; align-items:center; gap:0.8rem;">
                 <div class="verdict__pct-label">Score del modelo</div>
+                <!-- Comentario: mostramos el score crudo del modelo (0-1), sin porcentaje. -->
+                <div class="verdict__pct"
+                     th:text="${#numbers.formatDecimal(resultado.etiqueta == 'REAL' ? resultado.credibilidad : (resultado.etiqueta == 'FAKE' ? 1 - resultado.credibilidad : 0.5), 1, 5)}">0.87</div>
             </div>
         </div>
 
@@ -797,7 +797,7 @@
                 </div>
                  <!-- Comentario: si es FAKE, mostramos 1 - score para coherencia visual. -->
                  <div class="history-score"
-                     th:text="${item.etiqueta == 'FAKE'} ? 1 - ${item.credibilidad} : ${item.credibilidad}">0.82</div>
+                      th:text="${#numbers.formatDecimal(item.etiqueta == 'FAKE' ? 1 - item.credibilidad : item.credibilidad, 1, 5)}">0.82</div>
             </div>
         </div>
     </div>
