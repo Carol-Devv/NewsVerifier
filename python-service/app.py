@@ -26,15 +26,17 @@ classifier = pipeline(
     truncation=True,
 )
 
+# Umbral de confianza: por debajo de este valor el resultado es INCIERTO.
+# Subido de 0.6 a 0.75 para reducir la polarizacion y ser menos tajante.
+CONFIDENCE_THRESHOLD = 0.75
+
 
 class Indicador(BaseModel):
-    # indicador interpretable para mostrar en la UI.
     tipo: str = Field(..., description="positivo|negativo|neutro")
     texto: str = Field(..., description="descripcion corta")
 
 
 class Fuente(BaseModel):
-    # se deja disponible para futuras integraciones con fuentes reales.
     nombre: str
     url: str
     dominio: str
@@ -42,14 +44,12 @@ class Fuente(BaseModel):
 
 
 class AnalisisRequest(BaseModel):
-    # contrato esperado por el backend Java.
     titulo: Optional[str] = ""
     texto: Optional[str] = ""
     fuente: Optional[str] = ""
 
 
 class AnalisisResponse(BaseModel):
-    # contrato de respuesta consumido por VerificadorService.
     etiqueta: str
     credibilidad: float
     explicacion: str
@@ -58,7 +58,6 @@ class AnalisisResponse(BaseModel):
 
 
 def _construir_texto(titulo: str, texto: str) -> str:
-    # concatenamos para dar mas contexto al modelo.
     partes = []
     if titulo:
         partes.append(titulo.strip())
@@ -68,7 +67,6 @@ def _construir_texto(titulo: str, texto: str) -> str:
 
 
 def _mapear_etiqueta(model_label: str) -> str:
-    # normalizamos etiquetas comunes a REAL/FAKE/INCIERTO.
     l = model_label.lower()
     if "fake" in l:
         return "FAKE"
@@ -79,7 +77,6 @@ def _mapear_etiqueta(model_label: str) -> str:
 
 @app.get("/health")
 def healthcheck() -> dict:
-    # endpoint simple para verificar que el servicio esta vivo.
     return {"status": "ok", "model": MODEL_NAME}
 
 
@@ -87,7 +84,6 @@ def healthcheck() -> dict:
 async def validation_exception_handler(
     request: Request, exc: RequestValidationError
 ) -> JSONResponse:
-    # registramos detalles del 422 para depurar el contrato.
     body = await request.body()
     logger.warning("Validacion fallida en /analizar. Body=%s Errors=%s", body, exc.errors())
     return JSONResponse(status_code=422, content={"detail": exc.errors()})
@@ -95,52 +91,69 @@ async def validation_exception_handler(
 
 @app.post("/analizar", response_model=AnalisisResponse)
 def analizar(payload: AnalisisRequest) -> AnalisisResponse:
-    # validamos que haya alguna entrada antes de invocar el modelo.
     if not (payload.titulo or payload.texto):
         raise HTTPException(status_code=400, detail="Falta titulo o texto")
 
     texto_modelo = _construir_texto(payload.titulo, payload.texto)
 
-    # inferencia directa del modelo; devuelve label y score.
+    # inferencia directa del modelo; devuelve label y score de confianza.
     salida = classifier(texto_modelo)[0]
-    etiqueta = _mapear_etiqueta(salida.get("label", ""))
-    # Comentario: devolvemos el score crudo del modelo, sin convertir a porcentaje.
-    credibilidad = float(salida.get("score", 0.0))
+    etiqueta_raw = _mapear_etiqueta(salida.get("label", ""))
+    confianza = float(salida.get("score", 0.0))
 
-    # si la confianza es baja, marcamos como INCIERTO.
-    # Comentario: umbral en score crudo 0-1 (0.6 equivale a 60%).
-    if credibilidad < 0.6:
+    # Normalizamos la credibilidad: si el modelo dice FAKE con confianza 0.9,
+    # la credibilidad de la noticia es 0.1 (no 0.9). Esto corrige la
+    # incoherencia semántica del código anterior.
+    if etiqueta_raw == "REAL":
+        credibilidad = confianza
+    else:
+        credibilidad = 1.0 - confianza
+
+    # Umbral más alto (0.75) para reducir la polarización: más noticias
+    # caerán en INCIERTO en lugar de ser tajantemente REAL o FAKE.
+    if confianza < CONFIDENCE_THRESHOLD:
         etiqueta = "INCIERTO"
+    else:
+        etiqueta = etiqueta_raw
 
-    # explicacion corta basada en el resultado del modelo.
+    # Añadimos el score de confianza a los indicadores para dar más contexto.
+    pct = int(confianza * 100)
+
     if etiqueta == "REAL":
         explicacion = (
             "El modelo detecta patrones compatibles con una noticia verificada. "
-            "La confianza es alta y no aparecen senales claras de desinformacion."
+            "La redacción y estructura son propias de periodismo informativo. "
+            "Se recomienda contrastar igualmente con fuentes primarias."
         )
         indicadores = [
-            Indicador(tipo="positivo", texto="Patrones de redaccion informativa"),
-            Indicador(tipo="positivo", texto="Confianza alta del modelo"),
+            Indicador(tipo="positivo", texto="Patrones de redacción informativa detectados"),
+            Indicador(tipo="positivo", texto=f"Confianza del modelo: {pct}%"),
+            Indicador(tipo="neutro",   texto="Verifica siempre con fuentes primarias"),
         ]
     elif etiqueta == "FAKE":
         explicacion = (
-            "El modelo detecta patrones compatibles con desinformacion. "
-            "Se recomienda contrastar con fuentes fiables."
+            "El modelo detecta patrones compatibles con desinformación. "
+            "El lenguaje o la estructura presentan señales de alerta. "
+            "Se recomienda contrastar con medios de referencia antes de difundir."
         )
         indicadores = [
-            Indicador(tipo="negativo", texto="Patrones asociados a desinformacion"),
-            Indicador(tipo="negativo", texto="Confianza alta del modelo"),
+            Indicador(tipo="negativo", texto="Patrones asociados a desinformación detectados"),
+            Indicador(tipo="negativo", texto=f"Confianza del modelo: {pct}%"),
+            Indicador(tipo="neutro",   texto="Contrasta con medios de referencia"),
         ]
     else:
         explicacion = (
-            "El modelo no alcanza un nivel de confianza suficiente. "
-            "Aporta mas texto o un titulo mas claro para un analisis mejor."
+            "El modelo no alcanza un nivel de confianza suficiente para emitir "
+            "un veredicto claro. Esto puede deberse a que la noticia mezcla "
+            "elementos verídicos e inciertos, o a que el texto es muy breve. "
+            "Aporta más contexto o consulta fuentes adicionales."
         )
         indicadores = [
-            Indicador(tipo="neutro", texto="Confianza insuficiente para decidir"),
+            Indicador(tipo="neutro", texto=f"Confianza del modelo insuficiente: {pct}%"),
+            Indicador(tipo="neutro", texto="El texto puede ser demasiado breve o ambiguo"),
+            Indicador(tipo="neutro", texto="Consulta fuentes adicionales para verificar"),
         ]
 
-    # de momento no se devuelven fuentes reales.
     fuentes: List[Fuente] = []
 
     return AnalisisResponse(
