@@ -1,4 +1,4 @@
-# NewsVerifier — Detector de Fake News (Alpha)
+# NewsVerifier — Detector de Fake News (Beta)
 > TFG · Frontend Thymeleaf + Spring Boot
 
 ---
@@ -9,17 +9,17 @@
 |-------------|---------------|
 | Java (JDK)  | 21            |
 | Maven       | 3.9+          |
-| (Opcional) API Python de IA | cualquiera |
+| API Python de IA (Opcional) | cualquiera |
 
 ---
 
 ## Arrancar la aplicación (modo actual con IA)
 
 ```bash
-# 1. Microservicio Python (IA)
+# 1. Microservicio Python: IA
 cd python-service
 # Si no existe el entorno virtual:
-# python -m venv .venv
+  # python -m venv .venv
 source ../.venv/bin/activate
 pip install -r requirements.txt
 uvicorn app:app --host 0.0.0.0 --port 5000
@@ -104,24 +104,24 @@ src/main/
 ├── java/com/newsverifier/
 │   ├── NewsVerifierApplication.java      ← Punto de entrada Spring Boot
 │   ├── config/
-│   │   └── SecurityConfig.java       ← Config Spring Security + BCrypt
+│   │   └── SecurityConfig.java           ← Configuración Spring Security + BCrypt
 │   ├── controller/
-│   │   └── MainController.java       ← Rutas y lógica de navegación
+│   │   └── MainController.java           ← Rutas y lógica de navegación
 │   ├── model/
-│   │   ├── Usuario.java              ← Entidad JPA de usuario
-│   │   ├── Analisis.java             ← Entidad JPA de cada análisis
-│   │   └── Resultado.java            ← DTO de respuesta de la IA
+│   │   ├── Usuario.java                  ← Entidad JPA de usuario
+│   │   ├── Analisis.java                 ← Entidad JPA de cada análisis
+│   │   └── Resultado.java                ← DTO de respuesta de la IA
 │   ├── repository/
-│   │   ├── UsuarioRepository.java    ← Acceso a BBDD usuarios
-│   │   └── AnalisisRepository.java   ← Acceso a BBDD análisis
+│   │   ├── UsuarioRepository.java        ← Acceso a BBDD usuarios
+│   │   └── AnalisisRepository.java       ← Acceso a BBDD análisis
 │   └── service/
-│       ├── AuthService.java          ← Login y registro con BCrypt
-│       └── VerificadorService.java   ← Llamada a API Python + mock
+│       ├── AuthService.java              ← Login y registro con BCrypt
+│       └── VerificadorService.java       ← Llamada a API Python + mock
 └── resources/
-    ├── application.properties        ← Configuración general
-    ├── data.sql                      ← Usuario demo precargado
+    ├── application.properties            ← Configuración general
+    ├── data.sql                          ← Usuario demo precargado
     └── templates/
-        ├── layout.html               ← Plantilla base (topbar + footer)
-        ├── login.html                ← Login + Registro
-        └── home.html                 ← Verificador + Historial
+        ├── layout.html                   ← Plantilla base (topbar + footer)
+        ├── login.html                    ← Login + Registro
+        └── home.html                     ← Verificador + Historial
 ```
