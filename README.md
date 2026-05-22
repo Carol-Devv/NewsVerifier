@@ -1,5 +1,5 @@
 # NewsVerifier — Detector de Fake News (Beta)
-> TFG · Frontend Thymeleaf + Spring Boot
+> TFG · Frontend Thymeleaf + Spring Boot + DB H2 Console
 
 ---
 
@@ -13,7 +13,7 @@
 
 ---
 
-## Arrancar la aplicación (modo actual con IA)
+## Arrancar la aplicación 
 
 ```bash
 # 1. Microservicio Python: IA
@@ -85,7 +85,7 @@ Valores posibles:
 
 ---
 
-## Consola H2 (base de datos)
+## Consola H2 (Base de Datos)
 
 Accede a la BBDD en memoria en: **http://localhost:8080/h2-console**
 
