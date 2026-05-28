@@ -104,10 +104,7 @@ def analizar(payload: AnalisisRequest) -> AnalisisResponse:
     # Normalizamos la credibilidad: si el modelo dice FAKE con confianza 0.9,
     # la credibilidad de la noticia es 0.1 (no 0.9). Esto corrige la
     # incoherencia semántica del código anterior.
-    if etiqueta_raw == "REAL":
-        credibilidad = confianza
-    else:
-        credibilidad = 1.0 - confianza
+    credibilidad = confianza
 
     # Umbral más alto (0.75) para reducir la polarización: más noticias
     # caerán en INCIERTO en lugar de ser tajantemente REAL o FAKE.
